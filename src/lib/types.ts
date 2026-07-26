@@ -16,6 +16,17 @@ export interface Brand {
 
 export type PartCondition = 'Genuine' | 'OEM' | 'Aftermarket';
 
+/** `root` additionally manages the staff allowlist. */
+export type StaffRole = 'root' | 'admin';
+
+export interface StaffMember {
+	email: string;
+	role: StaffRole;
+	note: string;
+	created_at: string;
+	created_by: string | null;
+}
+
 /** Shape returned to the UI (category/brand flattened to {slug,name}). */
 export interface Part {
 	id: string;

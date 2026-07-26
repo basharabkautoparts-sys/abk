@@ -29,13 +29,31 @@ built to work with that rather than around it:
 | **Base path** | The site lives in a subdirectory (`/abk`), so internal links can't be bare absolute paths. They all go through `url()` in `src/lib/paths.ts`, which is also what makes the move to a root domain a config change rather than an edit to every link. |
 
 **The security model:** the anon key is public by design — it ships in the
-JavaScript bundle. Row Level Security is the actual boundary: anonymous clients
-can read published parts and nothing else; writes require a signed-in staff
-account. This is verified in `supabase/schema.sql`.
+JavaScript bundle. Row Level Security is the actual boundary.
 
-> ⚠️ **This depends on sign-ups being disabled in Supabase.** Any authenticated
-> user can edit the catalogue, so if anyone can create an account, anyone can
-> edit it. See step 2 of the deployment checklist.
+Signing in and being *authorised* are separate things. Supabase Auth says who
+you are; the **`staff` table** says what you may do:
+
+| | anonymous | signed in, not on the list | `admin` | `root` |
+| --- | --- | --- | --- | --- |
+| Read published parts | ✅ | ✅ | ✅ | ✅ |
+| Read drafts | — | — | ✅ | ✅ |
+| Add / edit / delete parts | — | — | ✅ | ✅ |
+| Upload part images | — | — | ✅ | ✅ |
+| See the staff list | — | — | ✅ | ✅ |
+| Add / remove / change roles | — | — | — | ✅ |
+
+A signed-in account that is not on the list gets exactly what an anonymous
+visitor gets. That is enforced in Postgres, not in the UI — the admin pages just
+reflect it. Every row of that table is covered by a test in the commit history.
+
+Membership is keyed by **email**, not user id, so someone can be authorised
+before their account exists, and revoking never depends on finding a uuid. The
+database also refuses to remove or demote the **last root**, so the allowlist
+cannot be locked shut by accident.
+
+> ⚠️ **Sign-ups should still be disabled** (see the checklist) — but this model
+> means an unexpected account is inert rather than dangerous.
 
 ---
 
@@ -78,20 +96,44 @@ one-time setup steps.
 
 ### 1. Supabase — already done
 
-The schema, RLS policies, storage bucket and 18 sample parts are applied to
-project `jzazeevbtgarbtxgycms`. `supabase/schema.sql` is the source of truth if
-you ever need to rebuild it.
+Applied to project `jzazeevbtgarbtxgycms`: the schema, the `staff` allowlist and
+its roles, RLS policies on parts / staff / storage, the storage bucket, and 18
+sample parts. `supabase/schema.sql` is the source of truth if you ever need to
+rebuild it.
 
-### 2. Disable sign-ups, then create staff accounts
+### 2. Create the owner's login, and disable sign-ups
 
-**Do this before the site goes live.**
+The owner's address is **already authorised as `root`** in the `staff` table.
+It is not written down in this repository on purpose — the repo is public, and
+an email address in a public file gets harvested. Look it up in the Supabase
+table editor (_Table editor → staff_).
 
-1. _Authentication → Sign In / Providers → Email_ → turn **off** "Allow new
+What's missing is the Supabase account itself. Creating logins needs the admin
+API, so it has to be done from the dashboard:
+
+1. _Authentication → Users → **Add user**_ → that same address, set a password,
+   tick **Auto Confirm User**. Sign in at `/admin/` and the root badge appears
+   immediately.
+2. _Authentication → Sign In / Providers → Email_ → turn **off** "Allow new
    users to sign up".
-2. _Authentication → Users → Add user_ → create an account for each staff
-   member, with a password. These are the `/admin` logins.
 
-Without step 1, anyone could sign up and get write access to the catalogue.
+> 🔑 **Choose a fresh password.** Any password shared in a chat, ticket or email
+> should be treated as already known. Nobody needs to tell anyone else the
+> password to grant access — that's what the staff list is for.
+
+#### Adding more people later
+
+Two steps, in either order — access begins once both exist:
+
+1. **Authorise the email** — `/admin/staff` in the app (root only). This is what
+   grants permission, and removing someone here revokes access immediately, even
+   mid-session.
+2. **Create their login** — _Authentication → Users → Add user_ in Supabase.
+   With sign-ups disabled, they cannot create it themselves.
+
+Making that one step would mean an endpoint holding the service-role key, which
+can create any user in the project. That's a deliberate omission, not an
+oversight — say the word if you want it.
 
 ### 3. Repository variables
 
@@ -233,7 +275,9 @@ src/
     config.ts            Brand, contact, categories, brands, nav
     supabase.ts          Isomorphic client (build time + browser); demo-mode flag
     db.ts                Catalogue queries, mutations, client-side filtering
-    auth.svelte.ts       Browser-side staff session (Supabase Auth or demo)
+    auth.svelte.ts       Browser-side staff session + role (Supabase Auth or demo)
+    staff.ts             Staff allowlist: list / add / remove / change role
+    demo.ts              Demo-mode credentials
     resource.svelte.ts   Fetch-after-mount helper for the admin
     partForm.ts          Form parsing, validation + image upload
     paths.ts             Base-path-aware url() / asset() for every internal link
@@ -249,7 +293,7 @@ src/
     parts/               Catalogue + [slug] detail (slugs enumerated at build)
     about/  contact/
     sitemap.xml/  robots.txt/
-    admin/               Login, dashboard, parts CRUD — browser-only
+    admin/               Login, dashboard, parts CRUD, staff — browser-only
 supabase/
   schema.sql             Tables, RLS, storage bucket
   seed.sql               Sample catalogue

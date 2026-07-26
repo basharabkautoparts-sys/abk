@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/Logo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { admin, demoMode, initAdminSession, signOut } from '$lib/auth.svelte';
+	import { admin, demoMode, initAdminSession, isRoot, isStaff, signOut } from '$lib/auth.svelte';
 	import { isUnder, routePath } from '$lib/query';
 
 	let { children } = $props();
@@ -13,11 +13,14 @@
 	const path = $derived(routePath(page.url.pathname));
 	const isLogin = $derived(path === '/admin/login');
 
-	const links = [
+	const links = $derived([
 		{ href: '/admin', label: 'Dashboard', icon: 'grid', exact: true },
 		{ href: '/admin/parts', label: 'Parts', icon: 'part', exact: false },
-		{ href: '/admin/parts/new', label: 'Add part', icon: 'plus', exact: true }
-	];
+		{ href: '/admin/parts/new', label: 'Add part', icon: 'plus', exact: true },
+		// Managing the allowlist is root-only, and RLS enforces that regardless
+		// of what this menu shows.
+		...(isRoot() ? [{ href: '/admin/staff', label: 'Staff', icon: 'shield', exact: true }] : [])
+	]);
 
 	function active(href: string, exact: boolean): boolean {
 		return exact ? path === href : isUnder(path, href);
@@ -53,6 +56,36 @@
 	</div>
 {:else if isLogin}
 	{@render children()}
+{:else if admin.email && !isStaff()}
+	<!-- Signed in, but not on the staff allowlist. RLS already gives this
+	     account nothing; say so plainly instead of showing an empty admin. -->
+	<div class="flex min-h-screen items-center justify-center bg-slate-100 px-4">
+		<div class="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+			<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 text-amber-600">
+				<Icon name="alert" size={24} />
+			</div>
+			<h1 class="mt-4 text-lg font-black text-slate-800">This account isn't authorised</h1>
+			<p class="mt-2 text-sm text-slate-500">
+				You're signed in as <span class="font-semibold text-slate-700">{admin.email}</span>, but that
+				address isn't on the staff list. Ask a root user to add it.
+			</p>
+			<div class="mt-6 flex justify-center gap-3">
+				<button
+					type="button"
+					onclick={logout}
+					class="rounded-lg bg-abk-blue px-5 py-2.5 text-sm font-bold text-white hover:bg-abk-navy"
+				>
+					Sign out
+				</button>
+				<a
+					href={url('/')}
+					class="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700"
+				>
+					Back to site
+				</a>
+			</div>
+		</div>
+	</div>
 {:else if admin.email}
 	<div class="min-h-screen bg-slate-100">
 		<!-- Top bar -->
@@ -77,7 +110,16 @@
 					>
 						View site <Icon name="arrow" size={15} />
 					</a>
-					<span class="hidden text-sm text-slate-500 md:inline">{admin.email}</span>
+					<span class="hidden items-center gap-2 text-sm text-slate-500 md:inline-flex">
+						{admin.email}
+						<span
+							class="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider {isRoot()
+								? 'bg-abk-blue text-white'
+								: 'bg-slate-100 text-slate-500'}"
+						>
+							{admin.role}
+						</span>
+					</span>
 					<button
 						type="button"
 						onclick={logout}
