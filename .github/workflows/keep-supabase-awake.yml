@@ -1,12 +1,14 @@
 name: Keep Supabase awake
 
-# Supabase pauses a free project after 7 days with no activity, and a paused
-# project takes the catalogue down with it. One cheap read a day resets that
-# clock with six days to spare.
+# Supabase pauses a free project that goes a week without "sufficient user
+# database activity", and a paused project takes the catalogue down with it.
+# The docs put the bar at "a few user requests to the database each day", so
+# this makes several distinct queries rather than one — a single request a day
+# sits right on the boundary of that wording.
 #
-# The nightly deploy already queries Supabase to prerender the catalogue, so
-# this is the backstop: it keeps running even when a build is broken, and it
-# costs one HTTP request.
+# The nightly deploy also queries Supabase heavily (it reads the whole
+# catalogue to prerender ~20 pages). This workflow is the backstop: it keeps
+# running even when a build is broken, and costs a handful of HTTP requests.
 on:
   schedule:
     - cron: '41 5 * * *'
@@ -23,30 +25,56 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Query the catalogue
+      - name: Query the database
         env:
           PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || secrets.PUBLIC_SUPABASE_URL }}
           PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY || secrets.PUBLIC_SUPABASE_ANON_KEY }}
         run: |
+          set -u
           if [ -z "$PUBLIC_SUPABASE_URL" ] || [ -z "$PUBLIC_SUPABASE_ANON_KEY" ]; then
             echo "::error::PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY are not set."
             exit 1
           fi
 
-          # A plain anon read — the same request any visitor's browser makes.
-          # It needs no elevated key and cannot modify anything.
-          status=$(curl -sS -o /tmp/body -w '%{http_code}' \
-            "${PUBLIC_SUPABASE_URL}/rest/v1/parts?select=id&limit=1" \
-            -H "apikey: ${PUBLIC_SUPABASE_ANON_KEY}" \
-            -H "Authorization: Bearer ${PUBLIC_SUPABASE_ANON_KEY}")
+          # Plain anonymous reads — the same requests a visitor's browser makes.
+          # No elevated key, and RLS means none of them can modify anything.
+          queries=(
+            'parts?select=count'
+            'parts?select=id,slug&order=created_at.desc&limit=5'
+            'parts?select=id&published=eq.true&limit=1'
+            'parts?select=category_slug&limit=20'
+          )
 
-          echo "HTTP $status"
-          head -c 300 /tmp/body; echo
+          failed=0
+          for q in "${queries[@]}"; do
+            status=$(curl -sS -o /tmp/body -w '%{http_code}' \
+              "${PUBLIC_SUPABASE_URL}/rest/v1/${q}" \
+              -H "apikey: ${PUBLIC_SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${PUBLIC_SUPABASE_ANON_KEY}")
+            body=$(head -c 120 /tmp/body)
+            echo "HTTP ${status}  ${q}  →  ${body}"
+            [ "$status" = "200" ] || failed=1
+            sleep 2
+          done
 
-          if [ "$status" != "200" ]; then
-            echo "::error::Supabase did not answer with 200 — the project may be paused or the key rotated."
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::Supabase did not answer 200 — the project may be paused, or the key rotated."
+            {
+              echo "### ❌ Supabase ping failed"
+              echo "The project may be paused. Check <https://supabase.com/dashboard>."
+            } >> "$GITHUB_STEP_SUMMARY"
             exit 1
           fi
+
+          # Written to the run summary so the Actions page shows the outcome
+          # without anyone having to open the log.
+          {
+            echo "### ✅ Supabase is awake"
+            echo ""
+            echo "\`${#queries[@]}\` database queries answered 200 at $(date -u '+%Y-%m-%d %H:%M UTC')."
+            echo ""
+            echo "Next scheduled run: tomorrow 05:41 UTC."
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Reminder about scheduled-workflow expiry
         # GitHub disables cron workflows in a repository with no pushes for 60

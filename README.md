@@ -192,24 +192,50 @@ When you buy the domain, this is the whole procedure — **no code changes**:
 
 ## Keeping Supabase awake
 
-A free Supabase project **pauses after 7 days with no activity**, which would
-take the catalogue down with it. Two things prevent that, and they are
-deliberately independent:
+A free Supabase project pauses if it goes a week without enough activity, and a
+paused project takes the catalogue down with it. Note the bar is a *volume*, not
+a single heartbeat — [the docs](https://supabase.com/docs/guides/platform/free-project-pausing)
+say a project is inactive without "sufficient user database activity", and that
+"typically a few user requests to the database each day" is enough to avoid it.
 
-- The **nightly deploy** queries Supabase to prerender the catalogue.
-- **`.github/workflows/keep-supabase-awake.yml`** makes one anonymous read a
-  day. It is the backstop for when a build is broken, and costs one HTTP
-  request. It uses the same public anon key a visitor's browser uses, so it
-  cannot modify anything.
+Two independent things clear that bar:
 
-Either alone is enough; together the project would have to go six consecutive
-days with both failing before it paused.
+- The **nightly deploy** reads the whole catalogue to prerender ~20 pages —
+  roughly 40 queries per run.
+- **`.github/workflows/keep-supabase-awake.yml`** makes 4 distinct anonymous
+  reads a day. It is the backstop for when a build is broken. It uses the same
+  public anon key a visitor's browser uses, so RLS means it cannot modify
+  anything.
 
-> ⚠️ **The one way this still fails:** GitHub disables scheduled workflows in a
-> repository with no pushes for **60 days**, and it emails the owner when that
-> happens. If the repo goes quiet for two months, re-enable the workflows in the
-> Actions tab (or push any commit to reset the clock). Nothing here can prevent
-> that from GitHub's side.
+Real visitors count too, so in practice there are three sources.
+
+### Checking it actually works
+
+The workflow writes its outcome to the run summary, so the Actions page shows
+green/red without opening a log. To check from a terminal:
+
+```bash
+# last 5 runs, newest first — look for a `schedule` event within the last day
+gh run list --workflow keep-supabase-awake.yml --limit 5 \
+  --json conclusion,event,createdAt \
+  --jq '.[] | "\(.conclusion)\t\(.event)\t\(.createdAt)"'
+
+# run it right now
+gh workflow run keep-supabase-awake.yml
+```
+
+A failed run emails you, because GitHub notifies the workflow's author on
+scheduled-run failure. Supabase also emails a warning roughly a week before it
+would pause anything.
+
+> ⚠️ **Two caveats worth knowing.**
+>
+> 1. GitHub disables scheduled workflows in a repository with no pushes for
+>    **60 days**, and emails the owner when it does. Push any commit, or
+>    re-enable them in the Actions tab, to reset that clock.
+> 2. GitHub cron is best-effort — runs can be delayed under load, and
+>    occasionally skipped. That is fine here: the window is a week and the
+>    schedule is daily, so several misses in a row are harmless.
 
 ---
 
