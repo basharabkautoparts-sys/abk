@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { untrack } from 'svelte';
 	import { brands, categories } from '$lib/config';
 	import type { PartFormValues } from '$lib/partForm';
@@ -318,7 +319,7 @@
 			{saving ? 'Saving…' : submitLabel}
 		</button>
 		<a
-			href="/admin/parts"
+			href={url('/admin/parts')}
 			class="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800">Cancel</a
 		>
 	</div>

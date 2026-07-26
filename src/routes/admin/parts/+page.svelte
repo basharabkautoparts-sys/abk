@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartImage from '$lib/components/PartImage.svelte';
@@ -40,7 +41,7 @@
 		</p>
 	</div>
 	<a
-		href="/admin/parts/new"
+		href={url('/admin/parts/new')}
 		class="inline-flex items-center gap-2 rounded-lg bg-abk-blue px-4 py-2.5 text-sm font-bold text-white transition hover:bg-abk-navy"
 	>
 		<Icon name="plus" size={16} /> Add part
@@ -136,7 +137,7 @@
 							<td class="px-4 py-3">
 								<div class="flex items-center justify-end gap-1">
 									<a
-										href={`/parts/${part.slug}`}
+										href={url(`/parts/${part.slug}`)}
 										target="_blank"
 										title="View on site"
 										class="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-abk-blue"
@@ -144,7 +145,7 @@
 										<Icon name="arrow" size={16} />
 									</a>
 									<a
-										href={`/admin/parts/edit?id=${part.id}`}
+										href={url(`/admin/parts/edit?id=${part.id}`)}
 										title="Edit"
 										class="rounded-md p-2 text-slate-500 hover:bg-slate-100 hover:text-abk-blue"
 									>
@@ -177,7 +178,7 @@
 				{q ? `No parts match “${q}”.` : 'No parts yet.'}
 			</p>
 			<a
-				href="/admin/parts/new"
+				href={url('/admin/parts/new')}
 				class="mt-4 inline-block rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white"
 			>
 				Add your first part

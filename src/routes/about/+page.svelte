@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asset, url } from '$lib/paths';
 	import { brands, features, site } from '$lib/config';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -42,13 +43,13 @@
 		</div>
 		<div class="mt-8 flex flex-wrap gap-3">
 			<a
-				href="/parts"
+				href={url('/parts')}
 				class="inline-flex items-center gap-2 rounded-full bg-abk-blue px-5 py-2.5 text-sm font-bold text-white transition hover:bg-abk-navy"
 			>
 				Browse parts <Icon name="arrow" size={16} />
 			</a>
 			<a
-				href="/contact"
+				href={url('/contact')}
 				class="inline-flex items-center gap-2 rounded-full border border-slate-300 px-5 py-2.5 text-sm font-bold text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
 			>
 				Contact us
@@ -57,7 +58,7 @@
 	</div>
 
 	<div class="overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)]">
-		<img src="/banner-square.jpg" alt={site.name} class="w-full" width="1254" height="1254" />
+		<img src={asset('/banner-square.jpg')} alt={site.name} class="w-full" width="1254" height="1254" />
 	</div>
 </section>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { formatPrice } from '$lib/utils';
@@ -63,7 +64,7 @@
 		<p class="text-sm text-slate-500">Overview of your parts catalogue</p>
 	</div>
 	<a
-		href="/admin/parts/new"
+		href={url('/admin/parts/new')}
 		class="inline-flex items-center gap-2 rounded-lg bg-abk-blue px-4 py-2.5 text-sm font-bold text-white transition hover:bg-abk-navy"
 	>
 		<Icon name="plus" size={16} /> Add part
@@ -135,7 +136,7 @@
 <div class="mt-6 rounded-2xl border border-slate-200 bg-white p-6">
 	<div class="flex items-center justify-between">
 		<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Recently added</h2>
-		<a href="/admin/parts" class="text-sm font-bold text-abk-blue hover:underline">All parts →</a>
+		<a href={url('/admin/parts')} class="text-sm font-bold text-abk-blue hover:underline">All parts →</a>
 	</div>
 	{#if all.loading}
 		<p class="mt-4 text-sm text-slate-400">Loading…</p>
@@ -146,7 +147,7 @@
 			{#each recent as part (part.id)}
 				<li>
 					<a
-						href={`/admin/parts/edit?id=${part.id}`}
+						href={url(`/admin/parts/edit?id=${part.id}`)}
 						class="flex items-center gap-3 py-3 hover:bg-slate-50"
 					>
 						<span class="w-28 shrink-0 font-mono text-xs text-slate-400">{part.part_number}</span>

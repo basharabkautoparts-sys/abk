@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import type { PageData } from './$types';
 	import { site, whatsappInquiry, categoryBySlug } from '$lib/config';
 	import { formatPrice } from '$lib/utils';
@@ -46,11 +47,11 @@
 <div class="container-page py-8">
 	<!-- Breadcrumb -->
 	<nav class="flex flex-wrap items-center gap-1.5 text-sm text-slate-500" aria-label="Breadcrumb">
-		<a href="/" class="hover:text-abk-blue">Home</a>
+		<a href={url('/')} class="hover:text-abk-blue">Home</a>
 		<Icon name="chevron" size={14} />
-		<a href="/parts" class="hover:text-abk-blue">Parts</a>
+		<a href={url('/parts')} class="hover:text-abk-blue">Parts</a>
 		<Icon name="chevron" size={14} />
-		<a href={`/parts?category=${part.category.slug}`} class="hover:text-abk-blue"
+		<a href={url(`/parts?category=${part.category.slug}`)} class="hover:text-abk-blue"
 			>{part.category.name}</a
 		>
 		<Icon name="chevron" size={14} />

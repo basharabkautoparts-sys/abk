@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { page } from '$app/state';
 	import { nav, site } from '$lib/config';
 	import { admin } from '$lib/auth.svelte';
@@ -46,7 +47,7 @@
 <!-- Main header -->
 <header class="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
 	<div class="container-page flex h-16 items-center gap-4">
-		<a href="/" class="shrink-0" aria-label={site.name}>
+		<a href={url('/')} class="shrink-0" aria-label={site.name}>
 			<Logo height={44} />
 		</a>
 
@@ -54,7 +55,7 @@
 		<nav class="ml-2 hidden items-center gap-1 lg:flex">
 			{#each nav as item}
 				<a
-					href={item.href}
+					href={url(item.href)}
 					class="rounded-md px-3 py-2 text-sm font-semibold transition-colors {isActive(item.href)
 						? 'text-abk-blue'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-abk-blue'}"
@@ -67,7 +68,7 @@
 
 		<div class="ml-auto flex items-center gap-2">
 			<!-- Desktop search -->
-			<form action="/parts/" method="GET" class="hidden md:block" role="search">
+			<form action={url('/parts/')} method="GET" class="hidden md:block" role="search">
 				<div class="relative">
 					<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
 						<Icon name="search" size={16} />
@@ -85,7 +86,7 @@
 
 			{#if isAdmin}
 				<a
-					href="/admin"
+					href={url('/admin')}
 					class="hidden rounded-full border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 hover:border-abk-blue hover:text-abk-blue sm:inline-block"
 					>Admin</a
 				>
@@ -118,7 +119,7 @@
 	{#if menuOpen}
 		<div class="border-t border-slate-200 bg-white lg:hidden">
 			<div class="container-page space-y-1 py-3">
-				<form action="/parts/" method="GET" class="mb-3" role="search">
+				<form action={url('/parts/')} method="GET" class="mb-3" role="search">
 					<div class="relative">
 						<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
 							<Icon name="search" size={18} />
@@ -134,7 +135,7 @@
 				</form>
 				{#each nav as item}
 					<a
-						href={item.href}
+						href={url(item.href)}
 						onclick={() => (menuOpen = false)}
 						class="block rounded-md px-3 py-2.5 text-base font-semibold {isActive(item.href)
 							? 'bg-abk-sky text-abk-blue'
@@ -145,7 +146,7 @@
 				{/each}
 				{#if isAdmin}
 					<a
-						href="/admin"
+						href={url('/admin')}
 						onclick={() => (menuOpen = false)}
 						class="block rounded-md px-3 py-2.5 text-base font-semibold text-slate-700 hover:bg-slate-50"
 						>Admin dashboard</a

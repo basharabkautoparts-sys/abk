@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { goto } from '$app/navigation';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -11,14 +12,14 @@
 		const result = await parsePartForm(form);
 		if (!result.ok) return result.errors;
 		await createPart(result.input!);
-		await goto('/admin/parts', { invalidateAll: true });
+		await goto(url('/admin/parts'), { invalidateAll: true });
 	}
 </script>
 
 <Seo title="Add Part" canonical="/admin/parts/new" noindex />
 
 <nav class="mb-4 flex items-center gap-1.5 text-sm text-slate-500">
-	<a href="/admin/parts" class="hover:text-abk-blue">Parts</a>
+	<a href={url('/admin/parts')} class="hover:text-abk-blue">Parts</a>
 	<Icon name="chevron" size={14} />
 	<span class="text-slate-800">New</span>
 </nav>

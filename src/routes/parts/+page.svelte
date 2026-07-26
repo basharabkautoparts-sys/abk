@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
 	import { brands, categories, categoryBySlug, brandBySlug } from '$lib/config';
@@ -104,7 +105,7 @@
 		clearTimeout(searchTimer);
 		searchTimer = setTimeout(() => {
 			lastUrlQuery = searchTerm.trim();
-			goto(buildUrl({ q: searchTerm.trim() }), {
+			goto(url(buildUrl({ q: searchTerm.trim() })), {
 				keepFocus: true,
 				noScroll: true,
 				replaceState: true
@@ -116,7 +117,7 @@
 		clearTimeout(searchTimer);
 		searchTerm = '';
 		lastUrlQuery = '';
-		goto(buildUrl({ q: '' }), { keepFocus: true, noScroll: true, replaceState: true });
+		goto(url(buildUrl({ q: '' })), { keepFocus: true, noScroll: true, replaceState: true });
 	}
 </script>
 
@@ -140,9 +141,9 @@
 <section class="brand-gradient text-white">
 	<div class="container-page py-10">
 		<nav class="mb-3 flex items-center gap-1.5 text-sm text-white/70" aria-label="Breadcrumb">
-			<a href="/" class="hover:text-white">Home</a>
+			<a href={url('/')} class="hover:text-white">Home</a>
 			<Icon name="chevron" size={14} />
-			<a href="/parts" class="hover:text-white">Parts</a>
+			<a href={url('/parts')} class="hover:text-white">Parts</a>
 			{#if activeCategory}
 				<Icon name="chevron" size={14} />
 				<span class="text-white">{activeCategory.name}</span>
@@ -158,7 +159,7 @@
 <div class="container-page grid gap-8 py-10 lg:grid-cols-[220px_1fr]">
 	<!-- Sidebar filters -->
 	<aside class="lg:sticky lg:top-24 lg:self-start">
-		<form method="GET" action="/parts/" class="space-y-6">
+		<form method="GET" action={url('/parts/')} class="space-y-6">
 			<!-- keep the other filters when submitting without JS -->
 			{#if filters.category}<input type="hidden" name="category" value={filters.category} />{/if}
 			{#if filters.brand}<input type="hidden" name="brand" value={filters.brand} />{/if}
@@ -186,7 +187,7 @@
 				<ul class="space-y-0.5 text-sm">
 					<li>
 						<a
-							href={buildUrl({ category: '' })}
+							href={url(buildUrl({ category: '' }))}
 							class="flex items-center justify-between rounded-md px-2.5 py-1.5 {!filters.category
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
@@ -197,7 +198,7 @@
 					{#each categories as cat}
 						<li>
 							<a
-								href={buildUrl({ category: cat.slug })}
+								href={url(buildUrl({ category: cat.slug }))}
 								class="flex items-center justify-between rounded-md px-2.5 py-1.5 {filters.category ===
 								cat.slug
 									? 'bg-abk-sky font-semibold text-abk-blue'
@@ -216,7 +217,7 @@
 				<ul class="space-y-0.5 text-sm">
 					<li>
 						<a
-							href={buildUrl({ brand: '' })}
+							href={url(buildUrl({ brand: '' }))}
 							class="block rounded-md px-2.5 py-1.5 {!filters.brand
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
@@ -227,7 +228,7 @@
 					{#each brands as brand}
 						<li>
 							<a
-								href={buildUrl({ brand: brand.slug })}
+								href={url(buildUrl({ brand: brand.slug }))}
 								class="block rounded-md px-2.5 py-1.5 {filters.brand === brand.slug
 									? 'bg-abk-sky font-semibold text-abk-blue'
 									: 'text-slate-600 hover:bg-slate-50'}"
@@ -254,7 +255,7 @@
 			<div class="flex flex-wrap gap-2">
 				{#if activeCategory}
 					<a
-						href={buildUrl({ category: '' })}
+						href={url(buildUrl({ category: '' }))}
 						class="inline-flex items-center gap-1.5 rounded-full bg-abk-sky px-3 py-1 text-xs font-semibold text-abk-blue"
 					>
 						{activeCategory.name}
@@ -263,7 +264,7 @@
 				{/if}
 				{#if activeBrand}
 					<a
-						href={buildUrl({ brand: '' })}
+						href={url(buildUrl({ brand: '' }))}
 						class="inline-flex items-center gap-1.5 rounded-full bg-abk-sky px-3 py-1 text-xs font-semibold text-abk-blue"
 					>
 						{activeBrand.name}
@@ -287,7 +288,7 @@
 				<div class="flex overflow-hidden rounded-lg border border-slate-200">
 					{#each [{ v: 'newest', l: 'Newest' }, { v: 'name', l: 'Name' }, { v: 'price-asc', l: 'Price ↑' }, { v: 'price-desc', l: 'Price ↓' }] as opt}
 						<a
-							href={buildUrl({ sort: opt.v as Sort })}
+							href={url(buildUrl({ sort: opt.v as Sort }))}
 							class="px-3 py-1.5 text-xs font-semibold {filters.sort === opt.v
 								? 'bg-abk-blue text-white'
 								: 'bg-white text-slate-600 hover:bg-slate-50'}"
@@ -317,7 +318,7 @@
 					Try clearing filters or contact us — we source parts on request.
 				</p>
 				<div class="mt-5 flex justify-center gap-3">
-					<a href="/parts" class="rounded-full bg-abk-blue px-5 py-2 text-sm font-bold text-white">
+					<a href={url('/parts')} class="rounded-full bg-abk-blue px-5 py-2 text-sm font-bold text-white">
 						Clear filters
 					</a>
 				</div>

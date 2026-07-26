@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asset } from '$lib/paths';
 	import { site } from '$lib/config';
 	interface Props {
 		height?: number;
@@ -8,7 +9,7 @@
 </script>
 
 <img
-	src="/logo.png"
+	src={asset('/logo.png')}
 	alt={site.name}
 	width={Math.round(height * 2.12)}
 	height={height}

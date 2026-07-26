@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Seo from '$lib/components/Seo.svelte';
@@ -24,7 +25,7 @@
 		const result = await parsePartForm(form);
 		if (!result.ok) return result.errors;
 		await updatePart(id, result.input!);
-		await goto('/admin/parts', { invalidateAll: true });
+		await goto(url('/admin/parts'), { invalidateAll: true });
 	}
 
 	async function remove() {
@@ -34,7 +35,7 @@
 		deleting = true;
 		try {
 			await deletePart(current.id);
-			await goto('/admin/parts', { invalidateAll: true });
+			await goto(url('/admin/parts'), { invalidateAll: true });
 		} finally {
 			deleting = false;
 		}
@@ -44,7 +45,7 @@
 <Seo title={part.value ? `Edit ${part.value.name}` : 'Edit Part'} canonical="/admin/parts" noindex />
 
 <nav class="mb-4 flex items-center gap-1.5 text-sm text-slate-500">
-	<a href="/admin/parts" class="hover:text-abk-blue">Parts</a>
+	<a href={url('/admin/parts')} class="hover:text-abk-blue">Parts</a>
 	<Icon name="chevron" size={14} />
 	<span class="truncate text-slate-800">{part.value?.name ?? 'Edit'}</span>
 </nav>
@@ -60,7 +61,7 @@
 	<div class="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
 		<p class="font-semibold text-slate-700">That part no longer exists.</p>
 		<a
-			href="/admin/parts"
+			href={url('/admin/parts')}
 			class="mt-4 inline-block rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white"
 		>
 			Back to parts
@@ -70,7 +71,7 @@
 	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
 		<h1 class="text-2xl font-black tracking-tight text-slate-800">Edit part</h1>
 		<a
-			href={`/parts/${part.value.slug}`}
+			href={url(`/parts/${part.value.slug}`)}
 			target="_blank"
 			class="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-abk-blue"
 		>

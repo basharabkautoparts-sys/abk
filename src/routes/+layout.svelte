@@ -8,12 +8,13 @@
 	import { onMount } from 'svelte';
 	import { invalidateAll } from '$app/navigation';
 	import { isSupabaseConfigured } from '$lib/supabase';
+	import { routePath } from '$lib/query';
 	import { initAdminSession } from '$lib/auth.svelte';
 
 	let { children, data } = $props();
 
 	// Hide the public chrome inside the admin area (it has its own shell).
-	const isAdmin = $derived(page.url.pathname.startsWith('/admin'));
+	const isAdmin = $derived(routePath(page.url.pathname).startsWith('/admin'));
 
 	onMount(() => {
 		// Pages are prerendered, so the first paint shows the catalogue as it

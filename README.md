@@ -7,7 +7,10 @@ model and a staff-only admin for managing the catalogue.
 - **Framework:** SvelteKit (Svelte 5), prerendered to static HTML
 - **Styling:** Tailwind CSS v4
 - **Data / Auth / Storage:** Supabase (Postgres + Auth + Storage)
-- **Hosting:** GitHub Pages, at `https://www.abkautoparts.com`
+- **Hosting:** GitHub Pages, at
+  <https://basharabkautoparts-sys.github.io/abk/> (a custom domain can be
+  switched on later without touching the code — see
+  [Moving to a custom domain](#moving-to-a-custom-domain))
 
 ---
 
@@ -23,6 +26,7 @@ built to work with that rather than around it:
 | **New part URLs** | Part pages are prerendered per slug. A part created after the last deploy has no static file yet, so Pages serves the SPA fallback (`404.html`) and the app resolves the route client-side. The nightly rebuild then gives it a real page — which is what matters for crawlers. |
 | **Filtering / search** | `/parts` ships the whole published catalogue and filters in the browser. A static host cannot vary a response by query string. |
 | **Admin** | Runs entirely in the browser against Supabase Auth + RLS. No server session, no form actions. |
+| **Base path** | The site lives in a subdirectory (`/abk`), so internal links can't be bare absolute paths. They all go through `url()` in `src/lib/paths.ts`, which is also what makes the move to a root domain a config change rather than an edit to every link. |
 
 **The security model:** the anon key is public by design — it ships in the
 JavaScript bundle. Row Level Security is the actual boundary: anonymous clients
@@ -42,9 +46,13 @@ pnpm install
 pnpm dev
 ```
 
-Open <http://localhost:5173>. With **no Supabase configured**, the site runs in
-**demo mode**: it serves the bundled sample catalogue (`src/lib/data/seed.ts`)
-and a demo admin login. A yellow "Demo mode" badge is shown.
+Open <http://localhost:5173/abk/> — `/` redirects there. The dev server runs
+under the same base path as production on purpose, so a missing `url()` shows up
+locally instead of in a deploy.
+
+With **no Supabase configured**, the site runs in **demo mode**: it serves the
+bundled sample catalogue (`src/lib/data/seed.ts`) and a demo admin login. A
+yellow "Demo mode" badge is shown.
 
 **Demo admin:** go to `/admin`, sign in with the pre-filled credentials
 (`admin@abkautoparts.local` / `abk-demo-admin`). You can add/edit/delete parts —
@@ -102,32 +110,64 @@ can never publish the demo catalogue as if it were real.
 
 _Settings → Pages → Build and deployment → Source_ → **GitHub Actions**.
 
-### 5. Point the domain
-
-`static/CNAME` already contains `www.abkautoparts.com`. Add these DNS records at
-your registrar:
-
-| Type | Name | Value |
-| --- | --- | --- |
-| `CNAME` | `www` | `basharabkautoparts-sys.github.io` |
-| `A` | `@` | `185.199.108.153`, `.109.153`, `.110.153`, `.111.153` |
-
-The apex `A` records are optional — they make `abkautoparts.com` redirect to
-`www`. Once DNS resolves, tick **Enforce HTTPS** in _Settings → Pages_.
-
-### 6. Push
+### 5. Push
 
 ```bash
 git push origin main
 ```
 
-Watch the run in the Actions tab. After it goes green, submit
-`https://www.abkautoparts.com/sitemap.xml` in Google Search Console.
+Watch the run in the Actions tab. When it goes green the site is live at
+<https://basharabkautoparts-sys.github.io/abk/>.
 
-> **Serving from `username.github.io/abk` instead?** You would need
-> `paths.base` in `svelte.config.js` **and** every internal `href` prefixed with
-> it — links are written as plain absolute paths throughout. The custom domain
-> at the root avoids that entirely.
+The URL and base path are **not hard-coded**: `actions/configure-pages` reports
+what the Pages settings actually say, and the build takes `BASE_PATH` and
+`PUBLIC_SITE_URL` from it. The workflow then checks the built HTML carries that
+base path before publishing, because getting it wrong 404s every link.
+
+---
+
+## Moving to a custom domain
+
+When you buy the domain, this is the whole procedure — **no code changes**:
+
+1. Add these DNS records at the registrar:
+
+   | Type | Name | Value |
+   | --- | --- | --- |
+   | `CNAME` | `www` | `basharabkautoparts-sys.github.io` |
+   | `A` | `@` | `185.199.108.153`, `.109.153`, `.110.153`, `.111.153` |
+
+   The apex `A` records are optional — they make the bare domain redirect to
+   `www`.
+2. _Settings → Pages → Custom domain_ → enter `www.abkautoparts.com` and save.
+   GitHub commits a `CNAME` file for you.
+3. Once DNS resolves, tick **Enforce HTTPS**.
+4. Re-run the **Deploy to GitHub Pages** workflow. `configure-pages` now reports
+   no base path, so links, canonical URLs and the sitemap all switch over.
+5. Resubmit the sitemap in Search Console — the URLs have changed.
+
+---
+
+## Keeping Supabase awake
+
+A free Supabase project **pauses after 7 days with no activity**, which would
+take the catalogue down with it. Two things prevent that, and they are
+deliberately independent:
+
+- The **nightly deploy** queries Supabase to prerender the catalogue.
+- **`.github/workflows/keep-supabase-awake.yml`** makes one anonymous read a
+  day. It is the backstop for when a build is broken, and costs one HTTP
+  request. It uses the same public anon key a visitor's browser uses, so it
+  cannot modify anything.
+
+Either alone is enough; together the project would have to go six consecutive
+days with both failing before it paused.
+
+> ⚠️ **The one way this still fails:** GitHub disables scheduled workflows in a
+> repository with no pushes for **60 days**, and it emails the owner when that
+> happens. If the repo goes quiet for two months, re-enable the workflows in the
+> Actions tab (or push any commit to reset the clock). Nothing here can prevent
+> that from GitHub's side.
 
 ---
 
@@ -157,11 +197,19 @@ the **Deploy to GitHub Pages** workflow from the Actions tab.
 - URLs end in a trailing slash (`/parts/`), so every route is a directory with
   an `index.html` — unambiguous on any static host. Canonical tags match.
 
-**Known limitation:** category and brand views are query strings
-(`/parts/?category=filters`), which a static host cannot prerender separately.
-They are in the sitemap and Google renders JavaScript, but they are weaker
-landing pages than dedicated URLs would be. If category SEO matters, the fix is
-real routes (`/parts/category/[slug]/`), which prerender like part pages do.
+**Known limitations**
+
+- Category and brand views are query strings (`/parts/?category=filters`), which
+  a static host cannot prerender separately. They are in the sitemap and Google
+  renders JavaScript, but they are weaker landing pages than dedicated URLs
+  would be. If category SEO matters, the fix is real routes
+  (`/parts/category/[slug]/`), which prerender like part pages do.
+- On a **project site**, crawlers read `robots.txt` from the origin root
+  (`basharabkautoparts-sys.github.io/robots.txt`) — which belongs to a different
+  repository — so the one this site publishes at `/abk/robots.txt` is ignored.
+  It is generated correctly and starts working the moment you move to a custom
+  domain. In the meantime `/admin` is kept out of the index by its `noindex`
+  meta tag, and the sitemap can be submitted directly in Search Console.
 
 **Before launch:** confirm `site.email`, `site.address` and
 `site.social.facebook` in `src/lib/config.ts` — they are still placeholders.
@@ -188,6 +236,7 @@ src/
     auth.svelte.ts       Browser-side staff session (Supabase Auth or demo)
     resource.svelte.ts   Fetch-after-mount helper for the admin
     partForm.ts          Form parsing, validation + image upload
+    paths.ts             Base-path-aware url() / asset() for every internal link
     query.ts             Prerender-safe query string + path helpers
     seo.ts               Meta + JSON-LD helpers
     types.ts             Domain types
@@ -205,8 +254,10 @@ supabase/
   schema.sql             Tables, RLS, storage bucket
   seed.sql               Sample catalogue
 static/
-  CNAME                  Custom domain for GitHub Pages
   .nojekyll              Stops Pages hiding the _app/ directory
+.github/workflows/
+  deploy.yml             Build + publish to Pages (push, nightly, on demand)
+  keep-supabase-awake.yml  Daily anon read so the free project never pauses
 ```
 
 ---

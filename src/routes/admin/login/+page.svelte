@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Logo from '$lib/components/Logo.svelte';
@@ -24,7 +25,7 @@
 		loading = true;
 		error = await signIn(email, password);
 		loading = false;
-		if (!error) goto(safeRedirect(), { replaceState: true });
+		if (!error) goto(url(safeRedirect()), { replaceState: true });
 	}
 </script>
 
@@ -33,7 +34,7 @@
 <div class="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-12">
 	<div class="w-full max-w-sm">
 		<div class="flex justify-center">
-			<a href="/"><Logo height={52} /></a>
+			<a href={url('/')}><Logo height={52} /></a>
 		</div>
 		<div class="mt-8 rounded-2xl border border-slate-200 bg-white p-8 shadow-lg">
 			<h1 class="text-center text-xl font-black tracking-tight text-slate-800">Staff sign in</h1>
@@ -94,7 +95,7 @@
 			{/if}
 		</div>
 		<p class="mt-6 text-center text-sm text-slate-400">
-			<a href="/" class="hover:text-abk-blue">← Back to site</a>
+			<a href={url('/')} class="hover:text-abk-blue">← Back to site</a>
 		</p>
 	</div>
 </div>

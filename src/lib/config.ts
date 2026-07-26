@@ -14,8 +14,12 @@ export const site = {
 	description:
 		'A.B.K. Auto Parts Co., Ltd supplies 100% genuine Japanese auto parts for Toyota, Isuzu, Mitsubishi and Nissan, with fast and reliable global export from Thailand.',
 
-	/** Canonical site URL — update to the real domain before deploying. */
-	url: 'https://www.abkautoparts.com',
+	/**
+	 * Origin the site is served from, with no trailing slash and no base path —
+	 * `absoluteUrl()` adds the base path. Set `PUBLIC_SITE_URL` at build time;
+	 * the default is the GitHub Pages project site.
+	 */
+	url: import.meta.env.PUBLIC_SITE_URL || 'https://basharabkautoparts-sys.github.io',
 
 	// --- Contact (from the brand artwork) ---
 	phoneDisplay: '065-581-2720',

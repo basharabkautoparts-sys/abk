@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asset, url } from '$lib/paths';
 	import { brands, categories, nav, site } from '$lib/config';
 	import Icon from './Icon.svelte';
 
@@ -10,7 +11,7 @@
 		<!-- Brand + contact -->
 		<div class="lg:col-span-1">
 			<div class="inline-flex rounded-lg bg-white p-3 shadow-sm">
-				<img src="/logo.png" alt={site.name} class="h-10 w-auto" />
+				<img src={asset('/logo.png')} alt={site.name} class="h-10 w-auto" />
 			</div>
 			<p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
 				{site.description}
@@ -46,7 +47,7 @@
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each nav as item}
 					<li>
-						<a href={item.href} class="text-slate-400 hover:text-white">{item.label}</a>
+						<a href={url(item.href)} class="text-slate-400 hover:text-white">{item.label}</a>
 					</li>
 				{/each}
 			</ul>
@@ -58,7 +59,7 @@
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each categories.slice(0, 6) as cat}
 					<li>
-						<a href={`/parts?category=${cat.slug}`} class="text-slate-400 hover:text-white"
+						<a href={url(`/parts?category=${cat.slug}`)} class="text-slate-400 hover:text-white"
 							>{cat.name}</a
 						>
 					</li>
@@ -72,7 +73,7 @@
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each brands as brand}
 					<li>
-						<a href={`/parts?brand=${brand.slug}`} class="text-slate-400 hover:text-white"
+						<a href={url(`/parts?brand=${brand.slug}`)} class="text-slate-400 hover:text-white"
 							>{brand.name}</a
 						>
 					</li>

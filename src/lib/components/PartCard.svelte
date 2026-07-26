@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import type { Part } from '$lib/types';
 	import { formatPrice } from '$lib/utils';
 	import PartImage from './PartImage.svelte';
@@ -12,7 +13,7 @@
 </script>
 
 <a
-	href={`/parts/${part.slug}`}
+	href={url(`/parts/${part.slug}`)}
 	class="group flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[var(--shadow-card)] transition duration-200 hover:-translate-y-1 hover:border-abk-blue/30 hover:shadow-lg"
 >
 	<div class="relative aspect-[4/3] overflow-hidden">

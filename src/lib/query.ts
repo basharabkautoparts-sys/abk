@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { base } from '$app/paths';
 
 /**
  * Read a page's query string safely.
@@ -14,11 +15,14 @@ export function searchParams(url: URL): URLSearchParams {
 }
 
 /**
- * Drop the trailing slash the router appends (see `trailingSlash` in
- * +layout.ts) so a live pathname can be compared against a plain href.
+ * Reduce a live pathname to the base-less, slash-less form that route paths are
+ * written in throughout the app, so the two can be compared. `page.url.pathname`
+ * carries both the deployment's base path and the trailing slash; a plain href
+ * like `/parts` carries neither.
  */
 export function routePath(pathname: string): string {
-	return pathname.replace(/\/+$/, '') || '/';
+	const withoutBase = base && pathname.startsWith(base) ? pathname.slice(base.length) : pathname;
+	return withoutBase.replace(/\/+$/, '') || '/';
 }
 
 /** True when `pathname` is `href` itself, or a page nested under it. */

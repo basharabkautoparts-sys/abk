@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { site } from '$lib/config';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -98,7 +99,7 @@
 					<Icon name="whatsapp" size={18} /> Message on WhatsApp
 				</a>
 				<a
-					href="/parts"
+					href={url('/parts')}
 					class="inline-flex items-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-sm font-bold text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
 				>
 					Browse catalogue

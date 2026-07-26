@@ -1,0 +1,57 @@
+name: Keep Supabase awake
+
+# Supabase pauses a free project after 7 days with no activity, and a paused
+# project takes the catalogue down with it. One cheap read a day resets that
+# clock with six days to spare.
+#
+# The nightly deploy already queries Supabase to prerender the catalogue, so
+# this is the backstop: it keeps running even when a build is broken, and it
+# costs one HTTP request.
+on:
+  schedule:
+    - cron: '41 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-supabase-awake
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Query the catalogue
+        env:
+          PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || secrets.PUBLIC_SUPABASE_URL }}
+          PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY || secrets.PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$PUBLIC_SUPABASE_URL" ] || [ -z "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY are not set."
+            exit 1
+          fi
+
+          # A plain anon read — the same request any visitor's browser makes.
+          # It needs no elevated key and cannot modify anything.
+          status=$(curl -sS -o /tmp/body -w '%{http_code}' \
+            "${PUBLIC_SUPABASE_URL}/rest/v1/parts?select=id&limit=1" \
+            -H "apikey: ${PUBLIC_SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${PUBLIC_SUPABASE_ANON_KEY}")
+
+          echo "HTTP $status"
+          head -c 300 /tmp/body; echo
+
+          if [ "$status" != "200" ]; then
+            echo "::error::Supabase did not answer with 200 — the project may be paused or the key rotated."
+            exit 1
+          fi
+
+      - name: Reminder about scheduled-workflow expiry
+        # GitHub disables cron workflows in a repository with no pushes for 60
+        # days, which would silently stop this one. Surface it in the log so the
+        # run itself is the reminder.
+        run: |
+          echo "::notice::GitHub disables scheduled workflows after 60 days without repository activity."
+          echo "::notice::If nobody pushes for two months, re-enable this workflow in the Actions tab."

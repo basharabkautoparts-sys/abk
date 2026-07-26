@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asset, url } from '$lib/paths';
 	import type { PageData } from './$types';
 	import { brands, categories, features, site } from '$lib/config';
 	import Seo from '$lib/components/Seo.svelte';
@@ -39,7 +40,7 @@
 			</p>
 			<div class="mt-8 flex flex-wrap gap-3">
 				<a
-					href="/parts"
+					href={url('/parts')}
 					class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-abk-blue shadow-md transition hover:bg-slate-100"
 				>
 					Browse All Parts <Icon name="arrow" size={18} />
@@ -72,7 +73,7 @@
 		<div class="relative">
 			<div class="overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-white/20">
 				<img
-					src="/hero-parts.jpg"
+					src={asset('/hero-parts.jpg')}
 					alt="A montage of genuine Japanese auto parts — coil springs, brake discs, clutch kits, filters and drive shafts"
 					class="w-full"
 					width="845"
@@ -114,7 +115,7 @@
 	<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
 		{#each categories as cat}
 			<a
-				href={`/parts?category=${cat.slug}`}
+				href={url(`/parts?category=${cat.slug}`)}
 				class="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-abk-blue/30 hover:shadow-lg"
 			>
 				<div
@@ -144,7 +145,7 @@
 		<div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
 			{#each brands as brand}
 				<a
-					href={`/parts?brand=${brand.slug}`}
+					href={url(`/parts?brand=${brand.slug}`)}
 					class="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-8 text-xl font-black tracking-tight text-slate-700 shadow-sm transition hover:border-abk-blue hover:text-abk-blue"
 				>
 					{brand.name}
@@ -163,7 +164,7 @@
 				<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">Popular parts</h2>
 			</div>
 			<a
-				href="/parts"
+				href={url('/parts')}
 				class="hidden items-center gap-1 text-sm font-bold text-abk-blue hover:underline sm:flex"
 			>
 				View all <Icon name="arrow" size={16} />
@@ -196,7 +197,7 @@
 				{/each}
 			</ul>
 			<a
-				href="/about"
+				href={url('/about')}
 				class="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-abk-blue transition hover:bg-slate-100"
 			>
 				About ABK <Icon name="arrow" size={16} />
@@ -204,7 +205,7 @@
 		</div>
 		<div class="overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/20">
 			<img
-				src="/banner-square.jpg"
+				src={asset('/banner-square.jpg')}
 				alt="A.B.K. Auto Parts — genuine Japanese parts for Toyota, Isuzu, Mitsubishi and Nissan"
 				class="w-full"
 				width="1254"
@@ -224,7 +225,7 @@
 				<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">Recently added</h2>
 			</div>
 			<a
-				href="/parts?sort=newest"
+				href={url('/parts?sort=newest')}
 				class="hidden items-center gap-1 text-sm font-bold text-abk-blue hover:underline sm:flex"
 			>
 				View all <Icon name="arrow" size={16} />

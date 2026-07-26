@@ -8,6 +8,10 @@ on:
   # parts added in the admin real prerendered pages (and gets them into the
   # sitemap) without anyone having to push. Visitors see new parts immediately
   # either way — the pages refresh themselves from Supabase once loaded.
+  #
+  # This also touches Supabase every day, which on its own is enough to stop a
+  # free project pausing. keep-supabase-awake.yml is the backstop for when a
+  # build is broken.
   schedule:
     - cron: '17 2 * * *'
 
@@ -45,6 +49,15 @@ jobs:
             exit 1
           fi
 
+      # Reports where the site will actually be served from. On a project site
+      # that is <owner>.github.io + /<repo>; once a custom domain is set in the
+      # Pages settings it becomes that domain + no subpath. Feeding the build
+      # from here means switching domains needs no code change.
+      - uses: actions/configure-pages@v5
+        id: pages
+        with:
+          enablement: true
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -56,17 +69,30 @@ jobs:
 
       - run: pnpm check
 
-      - run: pnpm build
+      - name: Build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          PUBLIC_SITE_URL: ${{ steps.pages.outputs.origin }}
+        run: |
+          echo "Building for ${PUBLIC_SITE_URL}${BASE_PATH}/"
+          pnpm build
 
-      - name: Verify the catalogue was prerendered
-        # Guards against a build that succeeded but reached Supabase with an
-        # empty result — publishing an empty shop is worse than failing here.
+      - name: Verify the build
+        env:
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          PUBLIC_SITE_URL: ${{ steps.pages.outputs.origin }}
         run: |
           pages=$(find build/parts -mindepth 2 -name index.html | wc -l)
           echo "Prerendered $pages part pages."
+          # A build can succeed while reaching Supabase with an empty result —
+          # publishing an empty shop is worse than failing here.
           [ "$pages" -gt 0 ] || { echo "::error::No part pages were prerendered."; exit 1; }
-
-      - uses: actions/configure-pages@v5
+          # Every internal link carries the base path; if that went wrong the
+          # whole site 404s, so check before publishing rather than after.
+          grep -q "href=\"${BASE_PATH}/parts/\"" build/index.html \
+            || { echo "::error::Home page links are missing the base path '${BASE_PATH}'."; exit 1; }
+          grep -q "canonical\" href=\"${PUBLIC_SITE_URL}${BASE_PATH}/\"" build/index.html \
+            || { echo "::error::Canonical URL does not match ${PUBLIC_SITE_URL}${BASE_PATH}/."; exit 1; }
 
       - uses: actions/upload-pages-artifact@v3
         with:

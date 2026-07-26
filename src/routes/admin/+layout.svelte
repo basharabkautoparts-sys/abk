@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { url } from '$lib/paths';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -31,15 +32,15 @@
 		if (!admin.ready) return;
 		if (!admin.email && !isLogin) {
 			const target = encodeURIComponent(path + page.url.search);
-			goto(`/admin/login?redirectTo=${target}`, { replaceState: true });
+			goto(url(`/admin/login?redirectTo=${target}`), { replaceState: true });
 		} else if (admin.email && isLogin) {
-			goto('/admin', { replaceState: true });
+			goto(url('/admin'), { replaceState: true });
 		}
 	});
 
 	async function logout() {
 		await signOut();
-		goto('/admin/login', { replaceState: true });
+		goto(url('/admin/login'), { replaceState: true });
 	}
 </script>
 
@@ -57,7 +58,7 @@
 		<!-- Top bar -->
 		<header class="sticky top-0 z-30 border-b border-slate-200 bg-white">
 			<div class="flex h-16 items-center gap-4 px-4 sm:px-6">
-				<a href="/admin" class="flex items-center gap-2">
+				<a href={url('/admin')} class="flex items-center gap-2">
 					<Logo height={36} />
 					<span class="hidden text-sm font-bold text-slate-400 sm:inline">Admin</span>
 				</a>
@@ -70,7 +71,7 @@
 						</span>
 					{/if}
 					<a
-						href="/"
+						href={url('/')}
 						target="_blank"
 						class="hidden items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-abk-blue sm:flex"
 					>
@@ -94,7 +95,7 @@
 				<nav class="sticky top-24 space-y-1">
 					{#each links as link}
 						<a
-							href={link.href}
+							href={url(link.href)}
 							class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition {active(
 								link.href,
 								link.exact
@@ -115,7 +116,7 @@
 				<nav class="mb-4 flex gap-2 overflow-x-auto lg:hidden">
 					{#each links as link}
 						<a
-							href={link.href}
+							href={url(link.href)}
 							class="flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold {active(
 								link.href,
 								link.exact
