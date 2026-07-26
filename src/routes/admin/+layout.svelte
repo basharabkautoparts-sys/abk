@@ -1,13 +1,16 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { site } from '$lib/config';
+	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/Logo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
+	import { admin, demoMode, initAdminSession, signOut } from '$lib/auth.svelte';
+	import { isUnder, routePath } from '$lib/query';
 
-	let { children, data } = $props();
+	let { children } = $props();
 
-	const isLogin = $derived(page.url.pathname === '/admin/login');
-	const path = $derived(page.url.pathname);
+	const path = $derived(routePath(page.url.pathname));
+	const isLogin = $derived(path === '/admin/login');
 
 	const links = [
 		{ href: '/admin', label: 'Dashboard', icon: 'grid', exact: true },
@@ -16,13 +19,40 @@
 	];
 
 	function active(href: string, exact: boolean): boolean {
-		return exact ? path === href : path === href || path.startsWith(href + '/');
+		return exact ? path === href : isUnder(path, href);
+	}
+
+	onMount(initAdminSession);
+
+	// There is no server to guard the admin, so the route gate lives here.
+	// Supabase RLS is the real boundary: an unauthenticated client cannot read
+	// drafts or write anything no matter what it does with this UI.
+	$effect(() => {
+		if (!admin.ready) return;
+		if (!admin.email && !isLogin) {
+			const target = encodeURIComponent(path + page.url.search);
+			goto(`/admin/login?redirectTo=${target}`, { replaceState: true });
+		} else if (admin.email && isLogin) {
+			goto('/admin', { replaceState: true });
+		}
+	});
+
+	async function logout() {
+		await signOut();
+		goto('/admin/login', { replaceState: true });
 	}
 </script>
 
-{#if isLogin}
+{#if !admin.ready}
+	<div class="flex min-h-screen items-center justify-center bg-slate-100">
+		<div class="flex flex-col items-center gap-3 text-slate-400">
+			<Logo height={44} />
+			<p class="text-sm font-semibold">Checking your session…</p>
+		</div>
+	</div>
+{:else if isLogin}
 	{@render children()}
-{:else}
+{:else if admin.email}
 	<div class="min-h-screen bg-slate-100">
 		<!-- Top bar -->
 		<header class="sticky top-0 z-30 border-b border-slate-200 bg-white">
@@ -32,8 +62,10 @@
 					<span class="hidden text-sm font-bold text-slate-400 sm:inline">Admin</span>
 				</a>
 				<div class="ml-auto flex items-center gap-3">
-					{#if data.demoMode}
-						<span class="hidden rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 sm:inline">
+					{#if demoMode}
+						<span
+							class="hidden rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800 sm:inline"
+						>
 							Demo mode — changes are not persisted
 						</span>
 					{/if}
@@ -44,15 +76,14 @@
 					>
 						View site <Icon name="arrow" size={15} />
 					</a>
-					<span class="hidden text-sm text-slate-500 md:inline">{data.userEmail}</span>
-					<form method="POST" action="/admin/logout">
-						<button
-							type="submit"
-							class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:border-abk-red hover:text-abk-red"
-						>
-							<Icon name="logout" size={15} /> Logout
-						</button>
-					</form>
+					<span class="hidden text-sm text-slate-500 md:inline">{admin.email}</span>
+					<button
+						type="button"
+						onclick={logout}
+						class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:border-abk-red hover:text-abk-red"
+					>
+						<Icon name="logout" size={15} /> Logout
+					</button>
 				</div>
 			</div>
 		</header>
@@ -101,5 +132,9 @@
 				{@render children()}
 			</main>
 		</div>
+	</div>
+{:else}
+	<div class="flex min-h-screen items-center justify-center bg-slate-100">
+		<p class="text-sm font-semibold text-slate-400">Redirecting to sign in…</p>
 	</div>
 {/if}

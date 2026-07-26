@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { nav, site } from '$lib/config';
+	import { admin } from '$lib/auth.svelte';
+	import { isUnder, routePath, searchParams } from '$lib/query';
 	import Logo from './Logo.svelte';
 	import Icon from './Icon.svelte';
 
 	let menuOpen = $state(false);
 
-	const path = $derived(page.url.pathname);
-	const isAdmin = $derived(Boolean(page.data.isAdmin));
-	const searchValue = $derived(path === '/parts' ? (page.url.searchParams.get('q') ?? '') : '');
+	const path = $derived(routePath(page.url.pathname));
+	const isAdmin = $derived(admin.email !== null);
+	const searchValue = $derived(path === '/parts' ? (searchParams(page.url).get('q') ?? '') : '');
 
 	function isActive(href: string): boolean {
 		if (href === '/') return path === '/';
-		return path === href || path.startsWith(href + '/');
+		return isUnder(path, href);
 	}
 </script>
 
@@ -65,7 +67,7 @@
 
 		<div class="ml-auto flex items-center gap-2">
 			<!-- Desktop search -->
-			<form action="/parts" method="GET" class="hidden md:block" role="search">
+			<form action="/parts/" method="GET" class="hidden md:block" role="search">
 				<div class="relative">
 					<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
 						<Icon name="search" size={16} />
@@ -116,7 +118,7 @@
 	{#if menuOpen}
 		<div class="border-t border-slate-200 bg-white lg:hidden">
 			<div class="container-page space-y-1 py-3">
-				<form action="/parts" method="GET" class="mb-3" role="search">
+				<form action="/parts/" method="GET" class="mb-3" role="search">
 					<div class="relative">
 						<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
 							<Icon name="search" size={18} />

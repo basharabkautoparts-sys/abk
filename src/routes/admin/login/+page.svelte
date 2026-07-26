@@ -1,12 +1,31 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import type { ActionData, PageData } from './$types';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import Logo from '$lib/components/Logo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import Seo from '$lib/components/Seo.svelte';
+	import { searchParams } from '$lib/query';
+	import { DEMO_ADMIN_EMAIL, DEMO_ADMIN_PASSWORD, demoMode, signIn } from '$lib/auth.svelte';
 
-	let { data, form }: { data: PageData; form: ActionData } = $props();
+	let email = $state(demoMode ? DEMO_ADMIN_EMAIL : '');
+	let password = $state(demoMode ? DEMO_ADMIN_PASSWORD : '');
+	let error = $state<string | null>(null);
 	let loading = $state(false);
+
+	/** Only ever redirect back into the admin — never to an attacker-supplied URL. */
+	function safeRedirect(): string {
+		const target = searchParams(page.url).get('redirectTo');
+		if (target && target.startsWith('/admin') && !target.startsWith('//')) return target;
+		return '/admin';
+	}
+
+	async function submit(event: SubmitEvent) {
+		event.preventDefault();
+		loading = true;
+		error = await signIn(email, password);
+		loading = false;
+		if (!error) goto(safeRedirect(), { replaceState: true });
+	}
 </script>
 
 <Seo title="Admin Login" canonical="/admin/login" noindex />
@@ -20,26 +39,16 @@
 			<h1 class="text-center text-xl font-black tracking-tight text-slate-800">Staff sign in</h1>
 			<p class="mt-1 text-center text-sm text-slate-500">Manage the ABK parts catalogue</p>
 
-			{#if form?.error}
+			{#if error}
 				<div
 					class="mt-5 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm font-medium text-red-700"
 				>
 					<Icon name="alert" size={16} />
-					{form.error}
+					{error}
 				</div>
 			{/if}
 
-			<form
-				method="POST"
-				class="mt-5 space-y-4"
-				use:enhance={() => {
-					loading = true;
-					return async ({ update }) => {
-						await update();
-						loading = false;
-					};
-				}}
-			>
+			<form class="mt-5 space-y-4" onsubmit={submit}>
 				<div>
 					<label for="email" class="mb-1 block text-sm font-semibold text-slate-700">Email</label>
 					<input
@@ -48,21 +57,19 @@
 						type="email"
 						autocomplete="username"
 						required
-						value={form?.email ?? data.demoEmail ?? ''}
+						bind:value={email}
 						class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
 					/>
 				</div>
 				<div>
-					<label for="password" class="mb-1 block text-sm font-semibold text-slate-700"
-						>Password</label
-					>
+					<label for="password" class="mb-1 block text-sm font-semibold text-slate-700">Password</label>
 					<input
 						id="password"
 						name="password"
 						type="password"
 						autocomplete="current-password"
 						required
-						value={data.demoPassword ?? ''}
+						bind:value={password}
 						class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
 					/>
 				</div>
@@ -75,7 +82,7 @@
 				</button>
 			</form>
 
-			{#if data.demoMode}
+			{#if demoMode}
 				<div class="mt-5 rounded-lg bg-amber-50 px-3 py-3 text-xs text-amber-800">
 					<p class="font-bold">Demo mode</p>
 					<p class="mt-1">

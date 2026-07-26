@@ -18,10 +18,23 @@ export function pageTitle(title?: string): string {
 	return `${title} | ${site.shortName}`;
 }
 
+/**
+ * Apply the site's trailing-slash convention (see `trailingSlash` in
+ * +layout.ts) so canonical URLs name the URL that is actually served, rather
+ * than one that redirects to it. Asset paths are left alone.
+ */
+function normalisePath(path: string): string {
+	const [pathname, query] = path.split('?');
+	if (/\.[a-z0-9]+$/i.test(pathname)) return path;
+	const withSlash = pathname.endsWith('/') ? pathname : `${pathname}/`;
+	return query ? `${withSlash}?${query}` : withSlash;
+}
+
 /** Resolve a path or URL to an absolute URL against the configured site URL. */
 export function absoluteUrl(pathOrUrl = '/'): string {
 	if (/^https?:\/\//.test(pathOrUrl)) return pathOrUrl;
-	return `${site.url.replace(/\/$/, '')}${pathOrUrl.startsWith('/') ? '' : '/'}${pathOrUrl}`;
+	const path = pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+	return `${site.url.replace(/\/$/, '')}${normalisePath(path)}`;
 }
 
 /** Escape a string for safe embedding inside a <script type="application/ld+json"> tag. */

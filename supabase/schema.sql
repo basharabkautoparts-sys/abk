@@ -44,7 +44,9 @@ create index if not exists parts_number_trgm on public.parts using gin (part_num
 
 -- keep updated_at fresh
 create or replace function public.set_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = ''
+as $$
 begin
 	new.updated_at = now();
 	return new;
@@ -59,9 +61,13 @@ create trigger parts_set_updated_at
 -- ---------------------------------------------------------------------------
 -- Row Level Security
 --   * Anyone (anon) may read only PUBLISHED parts.
---   * Any authenticated staff member may read/write everything.
---     (Sign-ups are disabled in the Supabase dashboard, so only invited staff
---      have accounts — that is the whole access model for this catalog.)
+--   * Any authenticated user may read/write everything.
+--
+-- !! This model rests entirely on sign-ups being DISABLED in the Supabase
+-- !! dashboard (Authentication → Sign In / Providers → Email → "Allow new
+-- !! users to sign up" = off). The anon key is public — it ships in the
+-- !! JavaScript bundle — so if anyone can create an account, anyone can edit
+-- !! the catalogue. Verify that toggle before launch and after any Auth change.
 -- ---------------------------------------------------------------------------
 alter table public.parts enable row level security;
 
@@ -97,15 +103,21 @@ create policy "staff deletes parts"
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket for part images: public read, staff write.
+--
+-- The bucket is public, which bypasses access control for *retrieval* — the
+-- image URLs work for anyone without a SELECT policy. So the policy below is
+-- scoped to staff: granting it to `anon` would add nothing for display, and
+-- would let anybody enumerate the whole bucket.
 -- ---------------------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('part-images', 'part-images', true)
 on conflict (id) do nothing;
 
 drop policy if exists "public reads part images" on storage.objects;
-create policy "public reads part images"
+drop policy if exists "staff lists part images" on storage.objects;
+create policy "staff lists part images"
 	on storage.objects for select
-	to anon, authenticated
+	to authenticated
 	using (bucket_id = 'part-images');
 
 drop policy if exists "staff writes part images" on storage.objects;

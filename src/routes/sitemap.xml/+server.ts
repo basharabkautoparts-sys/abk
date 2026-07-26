@@ -1,10 +1,12 @@
-import { categories, site } from '$lib/config';
-import { listParts } from '$lib/server/db';
+import { categories } from '$lib/config';
+import { absoluteUrl } from '$lib/seo';
+import { listParts } from '$lib/db';
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = async ({ locals }) => {
-	const parts = await listParts(locals.supabase, { sort: 'newest' });
-	const base = site.url.replace(/\/$/, '');
+export const prerender = true;
+
+export const GET: RequestHandler = async () => {
+	const parts = await listParts({ sort: 'newest' });
 
 	type Entry = { loc: string; priority: string; changefreq: string; lastmod?: string };
 	const entries: Entry[] = [
@@ -30,7 +32,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 ${entries
 	.map(
 		(e) => `  <url>
-    <loc>${base}${e.loc.replace(/&/g, '&amp;')}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ''}
+    <loc>${absoluteUrl(e.loc).replace(/&/g, '&amp;')}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ''}
     <changefreq>${e.changefreq}</changefreq>
     <priority>${e.priority}</priority>
   </url>`

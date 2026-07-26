@@ -4,15 +4,34 @@ Marketing + catalogue site for **A.B.K. Auto Parts Co., Ltd** — genuine Japane
 auto parts (Toyota, Isuzu, Mitsubishi, Nissan) with a WhatsApp / phone inquiry
 model and a staff-only admin for managing the catalogue.
 
-- **Framework:** SvelteKit (Svelte 5) — server-rendered for SEO
+- **Framework:** SvelteKit (Svelte 5), prerendered to static HTML
 - **Styling:** Tailwind CSS v4
 - **Data / Auth / Storage:** Supabase (Postgres + Auth + Storage)
-- **Hosting:** Cloudflare Pages (via `@sveltejs/adapter-cloudflare`)
+- **Hosting:** GitHub Pages, at `https://www.abkautoparts.com`
 
-> **Why SvelteKit, not plain Svelte?** Plain Svelte builds a client-only SPA —
-> crawlers see an empty shell. SvelteKit renders real HTML on the server, adds
-> per-page `<title>`/meta, a sitemap, and JSON-LD structured data — everything
-> the SEO goal needs — and deploys straight to Cloudflare.
+---
+
+## How it works on a static host
+
+GitHub Pages serves files, not code — there is no server at runtime. The site is
+built to work with that rather than around it:
+
+| Concern | How it's handled |
+| --- | --- |
+| **SEO** | Every public page is **prerendered at build time**, reading the live catalogue from Supabase. Crawlers get real HTML with per-page titles, meta, canonical URLs and JSON-LD — no JavaScript required. |
+| **Fresh data** | Prerendered HTML is a snapshot. Once a page hydrates it re-queries Supabase, so parts added in the admin appear immediately for visitors, without a redeploy. |
+| **New part URLs** | Part pages are prerendered per slug. A part created after the last deploy has no static file yet, so Pages serves the SPA fallback (`404.html`) and the app resolves the route client-side. The nightly rebuild then gives it a real page — which is what matters for crawlers. |
+| **Filtering / search** | `/parts` ships the whole published catalogue and filters in the browser. A static host cannot vary a response by query string. |
+| **Admin** | Runs entirely in the browser against Supabase Auth + RLS. No server session, no form actions. |
+
+**The security model:** the anon key is public by design — it ships in the
+JavaScript bundle. Row Level Security is the actual boundary: anonymous clients
+can read published parts and nothing else; writes require a signed-in staff
+account. This is verified in `supabase/schema.sql`.
+
+> ⚠️ **This depends on sign-ups being disabled in Supabase.** Any authenticated
+> user can edit the catalogue, so if anyone can create an account, anyone can
+> edit it. See step 2 of the deployment checklist.
 
 ---
 
@@ -25,95 +44,128 @@ pnpm dev
 
 Open <http://localhost:5173>. With **no Supabase configured**, the site runs in
 **demo mode**: it serves the bundled sample catalogue (`src/lib/data/seed.ts`)
-and a demo admin login. A yellow “Demo mode” badge is shown.
+and a demo admin login. A yellow "Demo mode" badge is shown.
 
 **Demo admin:** go to `/admin`, sign in with the pre-filled credentials
 (`admin@abkautoparts.local` / `abk-demo-admin`). You can add/edit/delete parts —
-changes live in memory only and reset when the dev server restarts.
+changes live in memory only and reset on a full page reload.
 
-Useful scripts:
+To work against real data, copy `.env.example` to `.env` and fill in the two
+Supabase values, then restart the dev server.
 
 | Command | Purpose |
 | --- | --- |
 | `pnpm dev` | Dev server |
-| `pnpm build` | Production build (Cloudflare output) |
+| `pnpm build` | Prerender the whole site into `build/` |
 | `pnpm preview` | Preview the production build |
 | `pnpm check` | Type-check (svelte-check) |
-| `pnpm deploy` | Build + `wrangler pages deploy` |
 
 ---
 
-## Going live with Supabase
+## Deployment checklist
 
-1. **Create a project** at [supabase.com](https://supabase.com).
-2. **Run the schema:** open the SQL Editor and run `supabase/schema.sql`
-   (creates the `parts` table, RLS policies and the `part-images` storage
-   bucket). Optionally run `supabase/seed.sql` for the sample catalogue.
-3. **Disable public sign-ups:** _Authentication → Providers → Email_ → turn off
-   “Allow new users to sign up”. This makes the site staff-only.
-4. **Create staff accounts:** _Authentication → Users → Add user_ (with a
-   password). These are your admin logins.
-5. **Add environment variables** — copy `.env.example` to `.env` and fill in:
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) builds and
+publishes on every push to `main`, nightly, and on demand. These are the
+one-time setup steps.
 
-   ```bash
-   PUBLIC_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
-   PUBLIC_SUPABASE_ANON_KEY=YOUR-ANON-KEY
-   ```
+### 1. Supabase — already done
 
-   Restart `pnpm dev`. The “Demo mode” badge disappears and the site now reads
-   and writes live Supabase data. `/admin` now uses real Supabase Auth.
+The schema, RLS policies, storage bucket and 18 sample parts are applied to
+project `jzazeevbtgarbtxgycms`. `supabase/schema.sql` is the source of truth if
+you ever need to rebuild it.
 
-**How access works:** the public catalogue is read with the anon key and only
-sees `published = true` rows (enforced by Row Level Security). Any signed-in
-staff member can read everything and create/update/delete — there is no
-service-role key in the app, so nothing privileged ships to the browser or the
-edge worker.
+### 2. Disable sign-ups, then create staff accounts
 
----
+**Do this before the site goes live.**
 
-## Deploying to Cloudflare Pages
+1. _Authentication → Sign In / Providers → Email_ → turn **off** "Allow new
+   users to sign up".
+2. _Authentication → Users → Add user_ → create an account for each staff
+   member, with a password. These are the `/admin` logins.
 
-**Option A — Git integration (recommended)**
+Without step 1, anyone could sign up and get write access to the catalogue.
 
-1. Push this repo to GitHub/GitLab.
-2. Cloudflare dashboard → _Workers & Pages → Create → Pages_ → connect the repo.
-3. Build settings:
-   - **Build command:** `pnpm build`
-   - **Build output directory:** `.svelte-kit/cloudflare`
-4. Add the environment variables (`PUBLIC_SUPABASE_URL`,
-   `PUBLIC_SUPABASE_ANON_KEY`) under _Settings → Environment variables_ for both
-   Production and Preview.
-5. Deploy. `nodejs_compat` is already set in `wrangler.jsonc`.
+### 3. Repository variables
 
-**Option B — CLI**
+_Settings → Secrets and variables → Actions → **Variables** tab_ → add:
+
+| Name | Value |
+| --- | --- |
+| `PUBLIC_SUPABASE_URL` | `https://jzazeevbtgarbtxgycms.supabase.co` |
+| `PUBLIC_SUPABASE_ANON_KEY` | your project's publishable/anon key |
+
+Variables rather than secrets, because both values are public — they ship in the
+bundle. The workflow fails fast if either is missing, so a misconfigured build
+can never publish the demo catalogue as if it were real.
+
+### 4. Enable GitHub Pages
+
+_Settings → Pages → Build and deployment → Source_ → **GitHub Actions**.
+
+### 5. Point the domain
+
+`static/CNAME` already contains `www.abkautoparts.com`. Add these DNS records at
+your registrar:
+
+| Type | Name | Value |
+| --- | --- | --- |
+| `CNAME` | `www` | `basharabkautoparts-sys.github.io` |
+| `A` | `@` | `185.199.108.153`, `.109.153`, `.110.153`, `.111.153` |
+
+The apex `A` records are optional — they make `abkautoparts.com` redirect to
+`www`. Once DNS resolves, tick **Enforce HTTPS** in _Settings → Pages_.
+
+### 6. Push
 
 ```bash
-pnpm build
-npx wrangler pages deploy .svelte-kit/cloudflare
-# set secrets:
-npx wrangler pages secret put PUBLIC_SUPABASE_ANON_KEY
+git push origin main
 ```
 
-After deploying, set your real domain in `src/lib/config.ts` (`site.url`) so
-canonical URLs, the sitemap and social tags use it.
+Watch the run in the Actions tab. After it goes green, submit
+`https://www.abkautoparts.com/sitemap.xml` in Google Search Console.
+
+> **Serving from `username.github.io/abk` instead?** You would need
+> `paths.base` in `svelte.config.js` **and** every internal `href` prefixed with
+> it — links are written as plain absolute paths throughout. The custom domain
+> at the root avoids that entirely.
+
+---
+
+## Publishing catalogue changes
+
+Adding a part in `/admin` writes straight to Supabase, and visitors see it as
+soon as their page loads — no deploy needed.
+
+What a rebuild adds is a **prerendered page for that part** (a static HTML file
+with its own title, meta and Product JSON-LD) and its entry in `sitemap.xml`.
+That's what crawlers need. It happens automatically overnight; to do it now, run
+the **Deploy to GitHub Pages** workflow from the Actions tab.
 
 ---
 
 ## SEO — what's built in
 
-- **Server-side rendering** of every public page (real HTML for crawlers).
+- **Prerendered HTML** for every public page — real content for crawlers,
+  no JavaScript required.
 - Per-page `<title>`, meta description, canonical URL, Open Graph + Twitter
   cards via `src/lib/components/Seo.svelte`.
 - **JSON-LD structured data:** `AutoPartsStore` + `WebSite` (home), `Product`
   with price/availability (part pages), and `BreadcrumbList`.
-- **`/sitemap.xml`** generated from live catalogue data, **`/robots.txt`**
-  (disallows `/admin`), and social image `/og-image.jpg`.
-- Search-result pages (`?q=`) are `noindex`; category pages are indexable
-  landing pages.
+- **`/sitemap.xml`** generated from the live catalogue at build time,
+  **`/robots.txt`** (disallows `/admin`), and social image `/og-image.jpg`.
+- Search-result pages (`?q=`) are `noindex`.
+- URLs end in a trailing slash (`/parts/`), so every route is a directory with
+  an `index.html` — unambiguous on any static host. Canonical tags match.
 
-**Before launch:** update `site.url`, `site.email`, `site.address` and
-`site.social.facebook` in `src/lib/config.ts` (phone + WhatsApp are already set
-from the brand artwork). Then submit the sitemap in Google Search Console.
+**Known limitation:** category and brand views are query strings
+(`/parts/?category=filters`), which a static host cannot prerender separately.
+They are in the sitemap and Google renders JavaScript, but they are weaker
+landing pages than dedicated URLs would be. If category SEO matters, the fix is
+real routes (`/parts/category/[slug]/`), which prerender like part pages do.
+
+**Before launch:** confirm `site.email`, `site.address` and
+`site.social.facebook` in `src/lib/config.ts` — they are still placeholders.
+Phone and WhatsApp are already set from the brand artwork.
 
 ---
 
@@ -131,30 +183,32 @@ you manage.
 src/
   lib/
     config.ts            Brand, contact, categories, brands, nav
+    supabase.ts          Isomorphic client (build time + browser); demo-mode flag
+    db.ts                Catalogue queries, mutations, client-side filtering
+    auth.svelte.ts       Browser-side staff session (Supabase Auth or demo)
+    resource.svelte.ts   Fetch-after-mount helper for the admin
+    partForm.ts          Form parsing, validation + image upload
+    query.ts             Prerender-safe query string + path helpers
     seo.ts               Meta + JSON-LD helpers
     types.ts             Domain types
     utils.ts             slugify, price formatting
     data/seed.ts         Bundled sample catalogue (demo mode)
     components/          Header, Footer, PartCard, PartForm, Icon, Seo, …
-    server/
-      config.ts          Env detection (Supabase configured?)
-      db.ts              Data access — Supabase OR in-memory demo fallback
-      auth.ts            Demo-mode session helpers
-      partForm.ts        Form parsing, validation + image upload
   routes/
+    +layout.ts           prerender = true, trailingSlash = 'always'
     +page.svelte         Home
-    parts/               Catalogue + [slug] detail
+    parts/               Catalogue + [slug] detail (slugs enumerated at build)
     about/  contact/
     sitemap.xml/  robots.txt/
-    admin/               Login, dashboard, parts CRUD (staff only)
-  hooks.server.ts        Per-request Supabase client + auth
+    admin/               Login, dashboard, parts CRUD — browser-only
 supabase/
   schema.sql             Tables, RLS, storage bucket
   seed.sql               Sample catalogue
-static/                  Logo, banners, favicon, OG image
+static/
+  CNAME                  Custom domain for GitHub Pages
+  .nojekyll              Stops Pages hiding the _app/ directory
 ```
 
 ---
 
-© A.B.K. Auto Parts Co., Ltd. Built with SvelteKit, Tailwind, Supabase and
-Cloudflare.
+© A.B.K. Auto Parts Co., Ltd. Built with SvelteKit, Tailwind and Supabase.

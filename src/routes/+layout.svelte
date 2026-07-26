@@ -5,11 +5,27 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { site } from '$lib/config';
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
+	import { invalidateAll } from '$app/navigation';
+	import { isSupabaseConfigured } from '$lib/supabase';
+	import { initAdminSession } from '$lib/auth.svelte';
 
 	let { children, data } = $props();
 
 	// Hide the public chrome inside the admin area (it has its own shell).
 	const isAdmin = $derived(page.url.pathname.startsWith('/admin'));
+
+	onMount(() => {
+		// Pages are prerendered, so the first paint shows the catalogue as it
+		// stood at the last deploy — right for crawlers, potentially stale for
+		// people. Re-run the loads once hydrated to pick up anything the admin
+		// has changed since.
+		if (isSupabaseConfigured) invalidateAll();
+
+		// Resolve any existing staff session so the header can offer the admin
+		// link. Anonymous visitors resolve to null without a network call.
+		initAdminSession();
+	});
 </script>
 
 {#if isAdmin}

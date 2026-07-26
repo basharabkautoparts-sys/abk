@@ -1,13 +1,11 @@
 node_modules
 
 # Output
-.output
-.vercel
-.netlify
-.wrangler
 /build
 /.svelte-kit
 /package
+
+# Local env (Supabase credentials for `pnpm dev` / local builds)
 .env
 .env.*
 !.env.example
@@ -17,11 +15,9 @@ node_modules
 Thumbs.db
 *.log
 
-# Cloudflare
-.dev.vars
-
 # Tooling (machine-local)
 .claude/settings.local.json
 
+# Source artwork kept out of the repo; the exported assets live in static/
 /*.jpg
 /*.png

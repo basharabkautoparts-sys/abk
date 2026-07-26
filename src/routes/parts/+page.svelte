@@ -1,19 +1,71 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
 	import { brands, categories, categoryBySlug, brandBySlug } from '$lib/config';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
 	import { breadcrumbJsonLd } from '$lib/seo';
+	import { filterParts } from '$lib/db';
+	import { searchParams } from '$lib/query';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 
-	const activeCategory = $derived(data.filters.category ? categoryBySlug(data.filters.category) : null);
-	const activeBrand = $derived(data.filters.brand ? brandBySlug(data.filters.brand) : null);
+	const SORTS = ['newest', 'name', 'price-asc', 'price-desc'] as const;
+	type Sort = (typeof SORTS)[number];
+
+	/**
+	 * A static host cannot vary a response by query string, so the page ships
+	 * with the whole published catalogue and narrows it here instead.
+	 */
+	const urlFilters = $derived.by(() => {
+		const p = searchParams(page.url);
+		const sort = p.get('sort') ?? 'newest';
+		return {
+			q: p.get('q')?.trim() ?? '',
+			category: p.get('category') ?? '',
+			brand: p.get('brand') ?? '',
+			sort: (SORTS.includes(sort as Sort) ? sort : 'newest') as Sort
+		};
+	});
+
+	/**
+	 * The search box owns the term, rather than reading it back out of the URL:
+	 * the URL update is a best-effort mirror (it can be dropped if a navigation
+	 * is already in flight), and results must never depend on that landing.
+	 * Category, brand and sort stay URL-driven — they are plain links.
+	 */
+	let searchTerm = $state(untrack(() => urlFilters.q));
+	let lastUrlQuery = untrack(() => urlFilters.q);
+
+	$effect(() => {
+		// Adopt the URL's term when it changes underneath us — a header search,
+		// a shared link, or the back button.
+		if (urlFilters.q !== lastUrlQuery) {
+			lastUrlQuery = urlFilters.q;
+			searchTerm = urlFilters.q;
+		}
+	});
+
+	const filters = $derived({ ...urlFilters, q: searchTerm });
+
+	const parts = $derived(
+		filterParts(data.parts, {
+			q: filters.q || undefined,
+			category: filters.category || undefined,
+			brand: filters.brand || undefined,
+			sort: filters.sort
+		})
+	);
+
+	const activeCategory = $derived(filters.category ? categoryBySlug(filters.category) : null);
+	const activeBrand = $derived(filters.brand ? brandBySlug(filters.brand) : null);
 
 	const heading = $derived(
-		data.filters.q
-			? `Search: “${data.filters.q}”`
+		filters.q
+			? `Search: “${filters.q}”`
 			: activeCategory
 				? activeCategory.name
 				: activeBrand
@@ -30,32 +82,56 @@
 	);
 
 	/** Build a /parts URL from the current filters with overrides applied. */
-	function buildUrl(overrides: Partial<typeof data.filters>): string {
-		const f = { ...data.filters, ...overrides };
+	function buildUrl(overrides: Partial<typeof filters>): string {
+		const f = { ...filters, ...overrides };
 		const p = new URLSearchParams();
 		if (f.q) p.set('q', f.q);
 		if (f.category) p.set('category', f.category);
 		if (f.brand) p.set('brand', f.brand);
 		if (f.sort && f.sort !== 'newest') p.set('sort', f.sort);
 		const qs = p.toString();
-		return qs ? `/parts?${qs}` : '/parts';
+		return qs ? `/parts/?${qs}` : '/parts/';
 	}
 
-	const canonical = $derived(
-		data.filters.q ? '/parts' : buildUrl({ q: '', sort: 'newest' })
-	);
+	const canonical = $derived(filters.q ? '/parts' : buildUrl({ q: '', sort: 'newest' }));
+
+	// Filter on every keystroke; mirror into the URL a beat later so the view
+	// stays shareable. Without JS the form submits normally and the page
+	// reloads with ?q= applied.
+	let searchTimer: ReturnType<typeof setTimeout>;
+	function onSearchInput(event: Event) {
+		searchTerm = (event.currentTarget as HTMLInputElement).value;
+		clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			lastUrlQuery = searchTerm.trim();
+			goto(buildUrl({ q: searchTerm.trim() }), {
+				keepFocus: true,
+				noScroll: true,
+				replaceState: true
+			});
+		}, 250);
+	}
+
+	function clearSearch() {
+		clearTimeout(searchTimer);
+		searchTerm = '';
+		lastUrlQuery = '';
+		goto(buildUrl({ q: '' }), { keepFocus: true, noScroll: true, replaceState: true });
+	}
 </script>
 
 <Seo
 	title={heading}
-	canonical={canonical}
+	{canonical}
 	description={seoDescription}
-	noindex={Boolean(data.filters.q)}
+	noindex={Boolean(filters.q)}
 	jsonLd={[
 		breadcrumbJsonLd([
 			{ name: 'Home', url: '/' },
 			{ name: 'Parts', url: '/parts' },
-			...(activeCategory ? [{ name: activeCategory.name, url: `/parts?category=${activeCategory.slug}` }] : [])
+			...(activeCategory
+				? [{ name: activeCategory.name, url: `/parts?category=${activeCategory.slug}` }]
+				: [])
 		])
 	]}
 />
@@ -74,8 +150,7 @@
 		</nav>
 		<h1 class="text-3xl font-black tracking-tight sm:text-4xl">{heading}</h1>
 		<p class="mt-2 text-white/80">
-			{data.parts.length} part{data.parts.length === 1 ? '' : 's'}
-			{activeBrand && !activeCategory ? '' : ''} available
+			{parts.length} part{parts.length === 1 ? '' : 's'} available
 		</p>
 	</div>
 </section>
@@ -83,10 +158,11 @@
 <div class="container-page grid gap-8 py-10 lg:grid-cols-[220px_1fr]">
 	<!-- Sidebar filters -->
 	<aside class="lg:sticky lg:top-24 lg:self-start">
-		<form method="GET" action="/parts" class="space-y-6">
-			<!-- keep search term when changing filters -->
-			{#if data.filters.q}<input type="hidden" name="q" value={data.filters.q} />{/if}
-			<input type="hidden" name="sort" value={data.filters.sort} />
+		<form method="GET" action="/parts/" class="space-y-6">
+			<!-- keep the other filters when submitting without JS -->
+			{#if filters.category}<input type="hidden" name="category" value={filters.category} />{/if}
+			{#if filters.brand}<input type="hidden" name="brand" value={filters.brand} />{/if}
+			<input type="hidden" name="sort" value={filters.sort} />
 
 			<div>
 				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Search</h2>
@@ -97,7 +173,8 @@
 					<input
 						type="search"
 						name="q"
-						value={data.filters.q}
+						value={searchTerm}
+						oninput={onSearchInput}
 						placeholder="Name or part no…"
 						class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-abk-blue"
 					/>
@@ -110,8 +187,7 @@
 					<li>
 						<a
 							href={buildUrl({ category: '' })}
-							class="flex items-center justify-between rounded-md px-2.5 py-1.5 {!data.filters
-								.category
+							class="flex items-center justify-between rounded-md px-2.5 py-1.5 {!filters.category
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
 						>
@@ -122,8 +198,8 @@
 						<li>
 							<a
 								href={buildUrl({ category: cat.slug })}
-								class="flex items-center justify-between rounded-md px-2.5 py-1.5 {data.filters
-									.category === cat.slug
+								class="flex items-center justify-between rounded-md px-2.5 py-1.5 {filters.category ===
+								cat.slug
 									? 'bg-abk-sky font-semibold text-abk-blue'
 									: 'text-slate-600 hover:bg-slate-50'}"
 							>
@@ -141,7 +217,7 @@
 					<li>
 						<a
 							href={buildUrl({ brand: '' })}
-							class="block rounded-md px-2.5 py-1.5 {!data.filters.brand
+							class="block rounded-md px-2.5 py-1.5 {!filters.brand
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
 						>
@@ -152,7 +228,7 @@
 						<li>
 							<a
 								href={buildUrl({ brand: brand.slug })}
-								class="block rounded-md px-2.5 py-1.5 {data.filters.brand === brand.slug
+								class="block rounded-md px-2.5 py-1.5 {filters.brand === brand.slug
 									? 'bg-abk-sky font-semibold text-abk-blue'
 									: 'text-slate-600 hover:bg-slate-50'}"
 							>
@@ -166,8 +242,7 @@
 			<noscript>
 				<button
 					type="submit"
-					class="w-full rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white"
-					>Apply search</button
+					class="w-full rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white">Apply search</button
 				>
 			</noscript>
 		</form>
@@ -195,14 +270,15 @@
 						<Icon name="close" size={13} />
 					</a>
 				{/if}
-				{#if data.filters.q}
-					<a
-						href={buildUrl({ q: '' })}
+				{#if filters.q}
+					<button
+						type="button"
+						onclick={clearSearch}
 						class="inline-flex items-center gap-1.5 rounded-full bg-abk-sky px-3 py-1 text-xs font-semibold text-abk-blue"
 					>
-						“{data.filters.q}”
+						“{filters.q}”
 						<Icon name="close" size={13} />
-					</a>
+					</button>
 				{/if}
 			</div>
 
@@ -211,8 +287,8 @@
 				<div class="flex overflow-hidden rounded-lg border border-slate-200">
 					{#each [{ v: 'newest', l: 'Newest' }, { v: 'name', l: 'Name' }, { v: 'price-asc', l: 'Price ↑' }, { v: 'price-desc', l: 'Price ↓' }] as opt}
 						<a
-							href={buildUrl({ sort: opt.v as typeof data.filters.sort })}
-							class="px-3 py-1.5 text-xs font-semibold {data.filters.sort === opt.v
+							href={buildUrl({ sort: opt.v as Sort })}
+							class="px-3 py-1.5 text-xs font-semibold {filters.sort === opt.v
 								? 'bg-abk-blue text-white'
 								: 'bg-white text-slate-600 hover:bg-slate-50'}"
 						>
@@ -223,19 +299,23 @@
 			</div>
 		</div>
 
-		{#if data.parts.length}
+		{#if parts.length}
 			<div class="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-				{#each data.parts as part, i (part.id)}
+				{#each parts as part, i (part.id)}
 					<PartCard {part} eager={i < 4} />
 				{/each}
 			</div>
 		{:else}
 			<div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-20 text-center">
-				<div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-300">
+				<div
+					class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white text-slate-300"
+				>
 					<Icon name="search" size={28} />
 				</div>
 				<h3 class="mt-4 text-lg font-bold text-slate-700">No parts found</h3>
-				<p class="mt-1 text-sm text-slate-500">Try clearing filters or contact us — we source parts on request.</p>
+				<p class="mt-1 text-sm text-slate-500">
+					Try clearing filters or contact us — we source parts on request.
+				</p>
 				<div class="mt-5 flex justify-center gap-3">
 					<a href="/parts" class="rounded-full bg-abk-blue px-5 py-2 text-sm font-bold text-white">
 						Clear filters

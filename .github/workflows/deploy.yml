@@ -1,0 +1,83 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+  # The catalogue is baked into the HTML at build time. A nightly rebuild gives
+  # parts added in the admin real prerendered pages (and gets them into the
+  # sitemap) without anyone having to push. Visitors see new parts immediately
+  # either way — the pages refresh themselves from Supabase once loaded.
+  schedule:
+    - cron: '17 2 * * *'
+
+  # "Run workflow" in the Actions tab — use this after a big catalogue change
+  # instead of waiting for the nightly run.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race; queue instead of cancelling, so a scheduled
+# rebuild can't discard a push that is mid-flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PUBLIC_SUPABASE_URL: ${{ vars.PUBLIC_SUPABASE_URL || secrets.PUBLIC_SUPABASE_URL }}
+      PUBLIC_SUPABASE_ANON_KEY: ${{ vars.PUBLIC_SUPABASE_ANON_KEY || secrets.PUBLIC_SUPABASE_ANON_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail fast if Supabase is not configured
+        # Without these the build silently succeeds in demo mode and would
+        # publish the bundled sample catalogue as if it were the real one.
+        run: |
+          if [ -z "$PUBLIC_SUPABASE_URL" ] || [ -z "$PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::error::PUBLIC_SUPABASE_URL / PUBLIC_SUPABASE_ANON_KEY are not set."
+            echo "::error::Add them under Settings → Secrets and variables → Actions → Variables."
+            exit 1
+          fi
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm check
+
+      - run: pnpm build
+
+      - name: Verify the catalogue was prerendered
+        # Guards against a build that succeeded but reached Supabase with an
+        # empty result — publishing an empty shop is worse than failing here.
+        run: |
+          pages=$(find build/parts -mindepth 2 -name index.html | wc -l)
+          echo "Prerendered $pages part pages."
+          [ "$pages" -gt 0 ] || { echo "::error::No part pages were prerendered."; exit 1; }
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

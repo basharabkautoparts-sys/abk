@@ -1,7 +1,6 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { PartCondition, PartInput } from '$lib/types';
-import { brandBySlug, categoryBySlug } from '$lib/config';
-import { PART_IMAGES_BUCKET } from './config';
+import type { Part, PartCondition, PartInput } from './types';
+import { brandBySlug, categoryBySlug } from './config';
+import { PART_IMAGES_BUCKET, supabase } from './supabase';
 
 const CONDITIONS: PartCondition[] = ['Genuine', 'OEM', 'Aftermarket'];
 
@@ -45,11 +44,29 @@ export function emptyPartValues(): PartFormValues {
 	};
 }
 
-export async function parsePartForm(
-	request: Request,
-	supabase: SupabaseClient | null
-): Promise<ParseResult> {
-	const form = await request.formData();
+export function valuesFromPart(part: Part): PartFormValues {
+	return {
+		name: part.name,
+		part_number: part.part_number,
+		description: part.description,
+		price: part.price != null ? String(part.price) : '',
+		condition: part.condition,
+		oem: part.oem ?? '',
+		category_slug: part.category.slug,
+		brand_slug: part.brand.slug,
+		in_stock: part.in_stock,
+		featured: part.featured,
+		published: part.published,
+		images: part.images
+	};
+}
+
+/**
+ * Validate the admin form and upload any newly attached files to Supabase
+ * Storage. Runs in the browser — the staff member's own session is what
+ * authorises the upload (see the storage policies in supabase/schema.sql).
+ */
+export async function parsePartForm(form: FormData): Promise<ParseResult> {
 	const get = (k: string) => String(form.get(k) ?? '').trim();
 
 	const values: PartFormValues = {
@@ -89,11 +106,10 @@ export async function parsePartForm(
 	) as PartCondition;
 
 	// Handle file uploads (Supabase Storage only; ignored in demo mode).
-	const files = form
-		.getAll('files')
-		.filter((f): f is File => f instanceof File && f.size > 0);
+	const db = supabase();
+	const files = form.getAll('files').filter((f): f is File => f instanceof File && f.size > 0);
 	const uploaded: string[] = [];
-	if (supabase && files.length) {
+	if (db && files.length) {
 		for (const file of files) {
 			if (!file.type.startsWith('image/')) {
 				errors.images = 'Only image files can be uploaded.';
@@ -103,16 +119,17 @@ export async function parsePartForm(
 				errors.images = 'Each image must be under 5 MB.';
 				continue;
 			}
-			const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+			const ext =
+				(file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
 			const path = `parts/${crypto.randomUUID()}.${ext}`;
-			const { error } = await supabase.storage
+			const { error } = await db.storage
 				.from(PART_IMAGES_BUCKET)
 				.upload(path, file, { contentType: file.type, upsert: false });
 			if (error) {
 				errors.images = `Upload failed: ${error.message}`;
 				continue;
 			}
-			const { data } = supabase.storage.from(PART_IMAGES_BUCKET).getPublicUrl(path);
+			const { data } = db.storage.from(PART_IMAGES_BUCKET).getPublicUrl(path);
 			uploaded.push(data.publicUrl);
 		}
 	}

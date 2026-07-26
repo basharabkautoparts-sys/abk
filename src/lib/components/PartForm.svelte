@@ -1,25 +1,27 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { enhance } from '$app/forms';
 	import { brands, categories } from '$lib/config';
-	import type { PartFormValues } from '$lib/server/partForm';
+	import type { PartFormValues } from '$lib/partForm';
 	import Icon from './Icon.svelte';
 
 	interface Props {
 		values: PartFormValues;
-		errors?: Record<string, string>;
 		submitLabel: string;
 		demoMode?: boolean;
-		/** Form action target. Omit to post to the page's default action (new part). */
-		action?: string;
+		/**
+		 * Persist the submission. Return a map of field errors to display
+		 * (`_` for a form-level message), or nothing on success.
+		 */
+		save: (form: FormData) => Promise<Record<string, string> | void>;
 	}
-	let { values, errors = {}, submitLabel, demoMode = false, action = undefined }: Props = $props();
+	let { values, submitLabel, demoMode = false, save }: Props = $props();
 
 	// Seed the editable image list once from the incoming values. The parent
 	// keys this component by part id, so switching parts re-initialises it.
 	let images = $state<string[]>(untrack(() => [...values.images]));
 	let newUrl = $state('');
 	let saving = $state(false);
+	let errors = $state<Record<string, string>>({});
 
 	function addUrl() {
 		const u = newUrl.trim();
@@ -32,25 +34,36 @@
 
 	const conditions = ['Genuine', 'OEM', 'Aftermarket'];
 	const fieldError = (k: string) => errors[k];
+
+	async function onsubmit(event: SubmitEvent) {
+		event.preventDefault();
+		saving = true;
+		errors = {};
+		try {
+			const result = await save(new FormData(event.currentTarget as HTMLFormElement));
+			if (result) errors = result;
+		} catch (e) {
+			errors = { _: e instanceof Error ? e.message : String(e) };
+		} finally {
+			saving = false;
+		}
+	}
 </script>
 
-<form
-	method="POST"
-	{action}
-	enctype="multipart/form-data"
-	class="space-y-6"
-	use:enhance={() => {
-		saving = true;
-		return async ({ update }) => {
-			await update();
-			saving = false;
-		};
-	}}
->
-	<!-- Hidden inputs carry the current image URL list to the server -->
+<form enctype="multipart/form-data" class="space-y-6" {onsubmit}>
+	<!-- Hidden inputs carry the current image URL list through the submission -->
 	{#each images as img}
 		<input type="hidden" name="images" value={img} />
 	{/each}
+
+	{#if fieldError('_')}
+		<div
+			class="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+		>
+			<Icon name="alert" size={16} />
+			{fieldError('_')}
+		</div>
+	{/if}
 
 	<div class="rounded-2xl border border-slate-200 bg-white p-6">
 		<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Details</h2>
@@ -155,8 +168,7 @@
 			</div>
 
 			<div>
-				<label for="condition" class="mb-1 block text-sm font-semibold text-slate-700"
-					>Condition</label
+				<label for="condition" class="mb-1 block text-sm font-semibold text-slate-700">Condition</label
 				>
 				<select
 					id="condition"
@@ -206,7 +218,9 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="mt-3 text-sm text-slate-400">No images yet. The card will show a branded placeholder.</p>
+			<p class="mt-3 text-sm text-slate-400">
+				No images yet. The card will show a branded placeholder.
+			</p>
 		{/if}
 
 		<div class="mt-4 flex gap-2">
@@ -233,7 +247,8 @@
 
 		{#if demoMode}
 			<p class="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
-				<Icon name="alert" size={14} /> File upload needs Supabase Storage. In demo mode, add image URLs instead.
+				<Icon name="alert" size={14} /> File upload needs Supabase Storage. In demo mode, add image URLs
+				instead.
 			</p>
 		{:else}
 			<div class="mt-3">
@@ -258,16 +273,37 @@
 		<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Visibility</h2>
 		<div class="mt-4 space-y-3">
 			<label class="flex items-center gap-3 text-sm">
-				<input type="checkbox" name="published" checked={values.published} class="h-4 w-4 accent-abk-blue" />
-				<span><span class="font-semibold text-slate-700">Published</span> — visible on the public site</span>
+				<input
+					type="checkbox"
+					name="published"
+					checked={values.published}
+					class="h-4 w-4 accent-abk-blue"
+				/>
+				<span
+					><span class="font-semibold text-slate-700">Published</span> — visible on the public site</span
+				>
 			</label>
 			<label class="flex items-center gap-3 text-sm">
-				<input type="checkbox" name="in_stock" checked={values.in_stock} class="h-4 w-4 accent-abk-blue" />
-				<span><span class="font-semibold text-slate-700">In stock</span> — otherwise shown as backorder</span>
+				<input
+					type="checkbox"
+					name="in_stock"
+					checked={values.in_stock}
+					class="h-4 w-4 accent-abk-blue"
+				/>
+				<span
+					><span class="font-semibold text-slate-700">In stock</span> — otherwise shown as backorder</span
+				>
 			</label>
 			<label class="flex items-center gap-3 text-sm">
-				<input type="checkbox" name="featured" checked={values.featured} class="h-4 w-4 accent-abk-blue" />
-				<span><span class="font-semibold text-slate-700">Featured</span> — highlighted on the homepage</span>
+				<input
+					type="checkbox"
+					name="featured"
+					checked={values.featured}
+					class="h-4 w-4 accent-abk-blue"
+				/>
+				<span
+					><span class="font-semibold text-slate-700">Featured</span> — highlighted on the homepage</span
+				>
 			</label>
 		</div>
 	</div>
@@ -283,8 +319,7 @@
 		</button>
 		<a
 			href="/admin/parts"
-			class="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800"
-			>Cancel</a
+			class="rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-500 hover:text-slate-800">Cancel</a
 		>
 	</div>
 </form>
