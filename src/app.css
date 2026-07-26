@@ -1,0 +1,43 @@
+@import 'tailwindcss';
+
+/* ---- ABK brand design tokens (Tailwind v4 @theme) ---- */
+@theme {
+	--color-abk-red: #e01f26;
+	--color-abk-red-dark: #b8181e;
+	--color-abk-navy: #16337a;
+	--color-abk-blue: #1a3a8f;
+	--color-abk-blue-light: #2b52c0;
+	--color-abk-sky: #eaf1ff;
+
+	--font-sans:
+		'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+		sans-serif;
+
+	--shadow-card: 0 1px 2px rgb(16 51 122 / 0.06), 0 8px 24px rgb(16 51 122 / 0.08);
+}
+
+/* ---- base ---- */
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	@apply bg-white text-slate-800 antialiased;
+	font-family: var(--font-sans);
+}
+
+/* Utility: the diagonal brand band used across hero/sections */
+.brand-gradient {
+	background: linear-gradient(120deg, var(--color-abk-navy) 0%, var(--color-abk-blue) 55%, #22409e 100%);
+}
+
+.container-page {
+	@apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* Focus ring consistent with brand */
+:where(a, button, input, select, textarea):focus-visible {
+	outline: 2px solid var(--color-abk-blue-light);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
