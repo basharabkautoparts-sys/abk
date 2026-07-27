@@ -31,7 +31,7 @@ export function emptyPartValues(): PartFormValues {
 		name: '',
 		part_number: '',
 		description: '',
-		condition: 'Genuine',
+		condition: '',
 		oem: '',
 		category_slug: '',
 		brand_slug: '',
@@ -47,7 +47,7 @@ export function valuesFromPart(part: Part): PartFormValues {
 		name: part.name,
 		part_number: part.part_number,
 		description: part.description,
-		condition: part.condition,
+		condition: part.condition ?? '',
 		oem: part.oem ?? '',
 		category_slug: part.category.slug,
 		brand_slug: part.brand.slug,
@@ -70,7 +70,7 @@ export async function parsePartForm(form: FormData): Promise<ParseResult> {
 		name: get('name'),
 		part_number: get('part_number'),
 		description: get('description'),
-		condition: get('condition') || 'Genuine',
+		condition: get('condition'),
 		oem: get('oem'),
 		category_slug: get('category_slug'),
 		brand_slug: get('brand_slug'),
@@ -90,9 +90,12 @@ export async function parsePartForm(form: FormData): Promise<ParseResult> {
 	if (!categoryBySlug(values.category_slug)) errors.category_slug = 'Choose a category.';
 	if (!brandBySlug(values.brand_slug)) errors.brand_slug = 'Choose a brand.';
 
-	const condition = (
-		CONDITIONS.includes(values.condition as PartCondition) ? values.condition : 'Genuine'
-	) as PartCondition;
+	// Blank is a real answer, not a missing one: a part whose condition nobody
+	// chose shows no condition at all, rather than being labelled "Genuine" by a
+	// default that was never a decision.
+	const condition = CONDITIONS.includes(values.condition as PartCondition)
+		? (values.condition as PartCondition)
+		: null;
 
 	// Handle file uploads (Supabase Storage only; ignored in demo mode).
 	const db = supabase();

@@ -21,7 +21,7 @@
 			part.oem && part.oem !== part.part_number ? { label: 'OEM / Ref', value: part.oem } : null,
 			{ label: 'Vehicle Brand', value: part.brand.name },
 			{ label: 'Category', value: part.category.name },
-			{ label: 'Condition', value: part.condition },
+			part.condition ? { label: 'Condition', value: part.condition } : null,
 			{ label: 'Availability', value: part.in_stock ? 'In stock' : 'On backorder' }
 		].filter(Boolean) as { label: string; value: string }[]
 	);
@@ -112,14 +112,16 @@
 			<p class="mt-2 font-mono text-sm text-slate-500">Part No. {part.part_number}</p>
 
 			<!-- ABK quotes per enquiry rather than showing a price, so this space
-			     carries the two things a buyer actually needs to decide: condition
-			     and availability. -->
+			     carries what a buyer actually needs to decide: availability, and the
+			     condition where one was deliberately set. -->
 			<div class="mt-5 flex flex-wrap items-center gap-3">
-				<span
-					class="inline-flex items-center rounded-full bg-abk-sky px-3 py-1 text-sm font-bold text-abk-blue"
-				>
-					{part.condition}
-				</span>
+				{#if part.condition}
+					<span
+						class="inline-flex items-center rounded-full bg-abk-sky px-3 py-1 text-sm font-bold text-abk-blue"
+					>
+						{part.condition}
+					</span>
+				{/if}
 				{#if part.in_stock}
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700"

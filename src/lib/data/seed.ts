@@ -215,7 +215,7 @@ function build(raw: RawPart): Part {
 		name: raw.name,
 		part_number: raw.part_number,
 		description: raw.description,
-		condition: raw.condition ?? 'Genuine',
+		condition: raw.condition ?? null,
 		oem: raw.oem ?? null,
 		images: [],
 		in_stock: raw.in_stock ?? true,

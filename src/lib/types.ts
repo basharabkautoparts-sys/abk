@@ -58,7 +58,12 @@ export interface Part {
 	name: string;
 	part_number: string;
 	description: string;
-	condition: PartCondition;
+	/**
+	 * Null when nobody chose one, which is the default. The catalogue shows a
+	 * condition only where it was set deliberately — a badge that appears on
+	 * every part by default says nothing.
+	 */
+	condition: PartCondition | null;
 	/** Original equipment number, if different from part_number. */
 	oem: string | null;
 	images: string[];
@@ -76,7 +81,7 @@ export interface PartInput {
 	name: string;
 	part_number: string;
 	description: string;
-	condition: PartCondition;
+	condition: PartCondition | null;
 	oem: string | null;
 	images: string[];
 	in_stock: boolean;

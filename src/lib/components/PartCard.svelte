@@ -55,10 +55,12 @@
 				<span class="text-sm font-extrabold uppercase tracking-wide text-abk-blue"
 					>{part.brand.name}</span
 				>
-				<span
-					class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700"
-					>{part.condition}</span
-				>
+				{#if part.condition}
+					<span
+						class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700"
+						>{part.condition}</span
+					>
+				{/if}
 			</div>
 			<span
 				class="flex items-center gap-1 text-xs font-bold text-abk-blue opacity-0 transition group-hover:opacity-100"

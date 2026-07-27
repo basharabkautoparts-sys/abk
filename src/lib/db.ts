@@ -27,7 +27,7 @@ function mapRow(row: Record<string, unknown>): Part {
 		name: String(row.name),
 		part_number: String(row.part_number ?? ''),
 		description: String(row.description ?? ''),
-		condition: (row.condition as Part['condition']) ?? 'Genuine',
+		condition: (row.condition as Part['condition']) ?? null,
 		oem: (row.oem as string) ?? null,
 		images: Array.isArray(row.images) ? (row.images as string[]) : [],
 		in_stock: Boolean(row.in_stock),

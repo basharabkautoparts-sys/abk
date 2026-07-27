@@ -173,13 +173,18 @@
 			</div>
 
 			<div>
-				<label for="condition" class="mb-1 block text-sm font-semibold text-slate-700">Condition</label
+				<label for="condition" class="mb-1 block text-sm font-semibold text-slate-700"
+					>Condition <span class="font-normal text-slate-400">(optional)</span></label
 				>
 				<select
 					id="condition"
 					name="condition"
 					class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
 				>
+					<!-- Nothing is preselected on purpose. A condition shows on the part
+					     only when someone chose it here; left alone, the part carries no
+					     condition badge at all. -->
+					<option value="" selected={!values.condition}>Not specified</option>
 					{#each conditions as c}
 						<option value={c} selected={values.condition === c}>{c}</option>
 					{/each}

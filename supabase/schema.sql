@@ -61,8 +61,10 @@ create table if not exists public.parts (
 	name          text not null,
 	part_number   text not null default '',
 	description   text not null default '',
-	condition     text not null default 'Genuine'
-	              check (condition in ('Genuine', 'OEM', 'Aftermarket')),
+	-- Nullable and undefaulted on purpose: a condition shows on a part only
+	-- where someone chose one in the admin. NULL means "not specified", and a
+	-- CHECK passes for NULL, so the three real values stay constrained.
+	condition     text check (condition in ('Genuine', 'OEM', 'Aftermarket')),
 	oem           text,
 	images        text[] not null default '{}',
 	in_stock      boolean not null default true,
