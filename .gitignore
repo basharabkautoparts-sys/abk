@@ -1,0 +1,21 @@
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/build
+/.svelte-kit
+/package
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Cloudflare
+.dev.vars
