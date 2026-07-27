@@ -1,4 +1,4 @@
-import { categories } from '$lib/config';
+import { ensureTaxonomy, taxonomy } from '$lib/taxonomy.svelte';
 import { absoluteUrl } from '$lib/seo';
 import { listParts } from '$lib/db';
 import type { RequestHandler } from './$types';
@@ -6,6 +6,11 @@ import type { RequestHandler } from './$types';
 export const prerender = true;
 
 export const GET: RequestHandler = async () => {
+	// This is a prerendered endpoint rather than a page, so the root layout's
+	// load never runs for it — without this, the category URLs below would be
+	// built from the bundled fallback categories instead of the real ones.
+	await ensureTaxonomy();
+
 	const parts = await listParts({ sort: 'newest' });
 
 	type Entry = { loc: string; priority: string; changefreq: string; lastmod?: string };
@@ -14,7 +19,7 @@ export const GET: RequestHandler = async () => {
 		{ loc: '/parts', priority: '0.9', changefreq: 'daily' },
 		{ loc: '/about', priority: '0.5', changefreq: 'monthly' },
 		{ loc: '/contact', priority: '0.5', changefreq: 'monthly' },
-		...categories.map((c) => ({
+		...taxonomy.categories.map((c) => ({
 			loc: `/parts?category=${c.slug}`,
 			priority: '0.7',
 			changefreq: 'weekly'

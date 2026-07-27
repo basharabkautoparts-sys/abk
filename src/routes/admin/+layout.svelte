@@ -17,6 +17,10 @@
 		{ href: '/admin', label: 'Dashboard', icon: 'grid', exact: true },
 		{ href: '/admin/parts', label: 'Parts', icon: 'part', exact: false },
 		{ href: '/admin/parts/new', label: 'Add part', icon: 'plus', exact: true },
+		// Brands and categories are catalogue taxonomy, not an access control —
+		// any signed-in admin may manage them.
+		{ href: '/admin/brands', label: 'Brands', icon: 'truck', exact: true },
+		{ href: '/admin/categories', label: 'Categories', icon: 'tag', exact: true },
 		// Managing the allowlist is root-only, and RLS enforces that regardless
 		// of what this menu shows.
 		...(isRoot() ? [{ href: '/admin/staff', label: 'Staff', icon: 'shield', exact: true }] : [])

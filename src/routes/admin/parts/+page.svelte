@@ -3,7 +3,7 @@
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartImage from '$lib/components/PartImage.svelte';
-	import { formatPrice } from '$lib/utils';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import { deletePart, filterParts, listParts } from '$lib/db';
 	import { resource } from '$lib/resource.svelte';
 	import type { Part } from '$lib/types';
@@ -11,10 +11,13 @@
 	const all = resource<Part[]>([], () => listParts({ sort: 'newest' }, { admin: true }));
 
 	let q = $state('');
+	let brand = $state('');
 	let notice = $state<string | null>(null);
 	let deleting = $state<string | null>(null);
 
-	const parts = $derived(filterParts(all.value, { q: q.trim() || undefined }, true));
+	const parts = $derived(
+		filterParts(all.value, { q: q.trim() || undefined, brand: brand || undefined }, true)
+	);
 
 	async function remove(part: Part) {
 		if (!confirm(`Delete “${part.name}”? This cannot be undone.`)) return;
@@ -39,6 +42,7 @@
 		<p class="text-sm text-slate-500">
 			{all.loading ? 'Loading…' : `${parts.length} item${parts.length === 1 ? '' : 's'}`}
 		</p>
+		<div class="rule-brand mt-2"></div>
 	</div>
 	<a
 		href={url('/admin/parts/new')}
@@ -62,8 +66,8 @@
 	</div>
 {/if}
 
-<div class="mt-5" role="search">
-	<div class="relative max-w-md">
+<div class="mt-5 flex flex-wrap items-center gap-3" role="search">
+	<div class="relative min-w-[200px] max-w-md flex-1">
 		<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
 			<Icon name="search" size={16} />
 		</span>
@@ -74,6 +78,15 @@
 			class="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-9 pr-3 text-sm outline-none focus:border-abk-blue"
 		/>
 	</div>
+	<select
+		bind:value={brand}
+		class="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
+	>
+		<option value="">All brands</option>
+		{#each taxonomy.brands as b}
+			<option value={b.slug}>{b.name}</option>
+		{/each}
+	</select>
 </div>
 
 <div class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -87,9 +100,7 @@
 				>
 					<tr>
 						<th class="px-4 py-3 font-semibold">Part</th>
-						<th class="hidden px-4 py-3 font-semibold md:table-cell">Brand</th>
 						<th class="hidden px-4 py-3 font-semibold lg:table-cell">Category</th>
-						<th class="px-4 py-3 font-semibold">Price</th>
 						<th class="px-4 py-3 font-semibold">Status</th>
 						<th class="px-4 py-3 text-right font-semibold">Actions</th>
 					</tr>
@@ -104,13 +115,16 @@
 									</div>
 									<div class="min-w-0">
 										<p class="truncate font-semibold text-slate-800">{part.name}</p>
-										<p class="font-mono text-xs text-slate-400">{part.part_number}</p>
+										<div class="mt-0.5 flex items-center gap-1.5">
+											<span class="rounded bg-abk-sky px-1.5 py-0.5 text-[11px] font-bold text-abk-blue"
+												>{part.brand.name}</span
+											>
+											<span class="font-mono text-xs text-slate-400">{part.part_number}</span>
+										</div>
 									</div>
 								</div>
 							</td>
-							<td class="hidden px-4 py-3 text-slate-600 md:table-cell">{part.brand.name}</td>
 							<td class="hidden px-4 py-3 text-slate-600 lg:table-cell">{part.category.name}</td>
-							<td class="px-4 py-3 font-semibold text-slate-700">{formatPrice(part.price)}</td>
 							<td class="px-4 py-3">
 								<div class="flex flex-wrap gap-1">
 									{#if part.published}
@@ -123,7 +137,8 @@
 										>
 									{/if}
 									{#if part.featured}
-										<span class="rounded bg-red-50 px-2 py-0.5 text-[11px] font-bold text-abk-red"
+										<span
+											class="rounded bg-abk-red-soft px-2 py-0.5 text-[11px] font-bold text-abk-red-dark"
 											>Featured</span
 										>
 									{/if}

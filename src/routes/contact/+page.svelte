@@ -85,6 +85,7 @@
 		</div>
 
 		<div class="flex flex-col justify-center rounded-2xl bg-slate-50 p-8 text-center">
+			<div class="rule-brand mx-auto mb-3 w-fit"></div>
 			<h2 class="text-2xl font-black tracking-tight text-slate-800">Ready to order?</h2>
 			<p class="mx-auto mt-2 max-w-md text-slate-500">
 				Chat with our team now on WhatsApp for the quickest response.

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { categoryBySlug } from '$lib/config';
+	import { categoryBySlug } from '$lib/taxonomy.svelte';
 	import type { Part } from '$lib/types';
 	import Icon from './Icon.svelte';
 

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { url } from '$lib/paths';
 	import type { Part } from '$lib/types';
-	import { formatPrice } from '$lib/utils';
 	import PartImage from './PartImage.svelte';
 	import Icon from './Icon.svelte';
 
@@ -18,12 +17,6 @@
 >
 	<div class="relative aspect-[4/3] overflow-hidden">
 		<PartImage {part} {eager} class="transition duration-300 group-hover:scale-[1.06]" />
-
-		<span
-			class="absolute left-2.5 top-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-abk-blue shadow-sm"
-		>
-			{part.brand.name}
-		</span>
 
 		{#if part.featured}
 			<span
@@ -53,11 +46,17 @@
 		</h3>
 		<p class="mt-1 font-mono text-xs text-slate-500">No. {part.part_number}</p>
 
-		<div class="mt-auto flex items-end justify-between pt-4">
-			<div>
-				<span class="text-lg font-extrabold text-abk-navy">{formatPrice(part.price)}</span>
+		<!-- The vehicle brand is the first thing a customer checks — "does this fit
+		     my truck?" — so it sits in the card's data line, in body copy, where
+		     the price used to be. It was previously a pill floating over the
+		     photo; one placement, always legible, beats two. -->
+		<div class="mt-auto flex items-end justify-between gap-2 pt-4">
+			<div class="flex flex-wrap items-center gap-1.5">
+				<span class="text-sm font-extrabold uppercase tracking-wide text-abk-blue"
+					>{part.brand.name}</span
+				>
 				<span
-					class="ml-1.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700"
+					class="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-700"
 					>{part.condition}</span
 				>
 			</div>

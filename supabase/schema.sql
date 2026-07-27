@@ -3,12 +3,57 @@
 -- Run in Supabase SQL Editor (or `supabase db push`). Idempotent-ish: safe to
 -- re-run; drops & recreates policies.
 --
--- Design note: vehicle brands and part categories are FIXED and live in the
--- app config (src/lib/config.ts). Parts store `category_slug` / `brand_slug`
--- as text, so there is a single table to manage. No separate lookup tables.
+-- Design note: vehicle brands and part categories are managed data, edited from
+-- /admin and stored in `vehicle_brands` / `part_categories`. The slug is the
+-- primary key and parts reference it directly, so the taxonomy tables are pure
+-- lookup: renaming a brand changes only what is displayed.
+--
+-- There is deliberately no price anywhere. ABK quotes per enquiry, including
+-- export shipping, so a stored price could only ever be stale or misleading.
 -- ============================================================================
 
 create extension if not exists "pgcrypto";
+
+-- ============================================================================
+-- Taxonomy: vehicle brands and part categories
+-- ============================================================================
+
+create table if not exists public.vehicle_brands (
+	slug       text primary key,
+	name       text not null,
+	sort_order int not null default 0,
+	created_at timestamptz not null default now()
+);
+
+create table if not exists public.part_categories (
+	slug        text primary key,
+	name        text not null,
+	description text not null default '',
+	-- Icon keyword resolved by src/lib/components/Icon.svelte.
+	icon        text not null default 'part',
+	sort_order  int not null default 0,
+	created_at  timestamptz not null default now()
+);
+
+-- Starting lists, matching DEFAULT_BRANDS / DEFAULT_CATEGORIES in
+-- src/lib/config.ts (which is what the app falls back to before these load, and
+-- what demo mode runs on). Edit them in the admin afterwards, not here.
+insert into public.vehicle_brands (slug, name, sort_order) values
+	('toyota',     'Toyota',     1),
+	('isuzu',      'Isuzu',      2),
+	('mitsubishi', 'Mitsubishi', 3),
+	('nissan',     'Nissan',     4)
+on conflict (slug) do nothing;
+
+insert into public.part_categories (slug, name, description, icon, sort_order) values
+	('engine-transmission', 'Engine & Transmission', 'Pistons, gaskets, timing kits, mounts and transmission components.', 'engine', 1),
+	('brake-differential',  'Brake & Differential',  'Brake discs, pads, calipers, master cylinders and differential parts.', 'brake', 2),
+	('suspension-steering', 'Suspension & Steering', 'Shock absorbers, coil springs, ball joints, tie rod ends and bushings.', 'suspension', 3),
+	('filters',             'Filters',               'Oil, air, fuel and cabin filters for every service interval.', 'filter', 4),
+	('clutch-drivetrain',   'Clutch & Drivetrain',   'Clutch discs, pressure plates, CV joints, axles and bearings.', 'clutch', 5),
+	('electrical-ignition', 'Electrical & Ignition', 'Spark plugs, ignition coils, sensors, alternators and starters.', 'spark', 6),
+	('body-parts',          'Body Parts',            'Lamps, mirrors, panels, grilles and exterior trim.', 'body', 7)
+on conflict (slug) do nothing;
 
 create table if not exists public.parts (
 	id            uuid primary key default gen_random_uuid(),
@@ -16,8 +61,6 @@ create table if not exists public.parts (
 	name          text not null,
 	part_number   text not null default '',
 	description   text not null default '',
-	price         numeric(12, 2),
-	currency      text not null default 'THB',
 	condition     text not null default 'Genuine'
 	              check (condition in ('Genuine', 'OEM', 'Aftermarket')),
 	oem           text,
@@ -25,8 +68,14 @@ create table if not exists public.parts (
 	in_stock      boolean not null default true,
 	featured      boolean not null default false,
 	published     boolean not null default true,
-	category_slug text not null,
-	brand_slug    text not null,
+	-- ON DELETE RESTRICT is the point of these references: a category cannot be
+	-- deleted while parts still sit in it, and the admin turns that error into
+	-- "move or delete those parts first". ON UPDATE CASCADE is belt-and-braces —
+	-- the app treats slugs as immutable once created.
+	category_slug text not null references public.part_categories (slug)
+	              on update cascade on delete restrict,
+	brand_slug    text not null references public.vehicle_brands (slug)
+	              on update cascade on delete restrict,
 	created_at    timestamptz not null default now(),
 	updated_at    timestamptz not null default now()
 );
@@ -215,6 +264,32 @@ create policy "root removes staff"
 insert into public.staff (email, role, note, created_by)
 values ('owner@example.com', 'root', 'Owner', 'initial setup')
 on conflict (email) do update set role = 'root';
+
+-- ---------------------------------------------------------------------------
+-- Row Level Security on the taxonomy
+--   * Anyone may read it — every visitor needs the names to read the catalogue.
+--   * Staff may change it.
+-- ---------------------------------------------------------------------------
+alter table public.vehicle_brands  enable row level security;
+alter table public.part_categories enable row level security;
+
+drop policy if exists "anyone reads vehicle brands" on public.vehicle_brands;
+create policy "anyone reads vehicle brands"
+	on public.vehicle_brands for select to anon, authenticated using (true);
+
+drop policy if exists "staff writes vehicle brands" on public.vehicle_brands;
+create policy "staff writes vehicle brands"
+	on public.vehicle_brands for all to authenticated
+	using (private.is_staff()) with check (private.is_staff());
+
+drop policy if exists "anyone reads part categories" on public.part_categories;
+create policy "anyone reads part categories"
+	on public.part_categories for select to anon, authenticated using (true);
+
+drop policy if exists "staff writes part categories" on public.part_categories;
+create policy "staff writes part categories"
+	on public.part_categories for all to authenticated
+	using (private.is_staff()) with check (private.is_staff());
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security on the catalogue

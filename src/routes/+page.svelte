@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { asset, url } from '$lib/paths';
 	import type { PageData } from './$types';
-	import { brands, categories, features, site } from '$lib/config';
+	import { features, site } from '$lib/config';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
@@ -56,11 +57,11 @@
 			</div>
 			<dl class="mt-10 flex flex-wrap gap-x-10 gap-y-4">
 				<div>
-					<dt class="text-2xl font-black">4</dt>
+					<dt class="text-2xl font-black">{taxonomy.brands.length}</dt>
 					<dd class="text-xs uppercase tracking-wide text-white/70">Vehicle brands</dd>
 				</div>
 				<div>
-					<dt class="text-2xl font-black">{categories.length}</dt>
+					<dt class="text-2xl font-black">{taxonomy.categories.length}</dt>
 					<dd class="text-xs uppercase tracking-wide text-white/70">Part categories</dd>
 				</div>
 				<div>
@@ -105,6 +106,7 @@
 <!-- ============================ CATEGORIES ============================ -->
 <section class="container-page py-16">
 	<div class="mb-10 text-center">
+		<div class="rule-brand mx-auto mb-3 w-fit"></div>
 		<p class="text-sm font-bold uppercase tracking-wider text-abk-red">Shop by category</p>
 		<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">Find the right part, fast</h2>
 		<p class="mx-auto mt-3 max-w-2xl text-slate-500">
@@ -113,7 +115,7 @@
 	</div>
 
 	<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-		{#each categories as cat}
+		{#each taxonomy.categories as cat}
 			<a
 				href={url(`/parts?category=${cat.slug}`)}
 				class="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-abk-blue/30 hover:shadow-lg"
@@ -138,12 +140,13 @@
 <!-- ============================ BRANDS ============================ -->
 <section class="bg-slate-50 py-14">
 	<div class="container-page text-center">
+		<div class="rule-brand mx-auto mb-3 w-fit"></div>
 		<p class="text-sm font-bold uppercase tracking-wider text-abk-red">Vehicle coverage</p>
 		<h2 class="mt-2 text-2xl font-black tracking-tight text-slate-800">
 			Parts for Japan's most trusted brands
 		</h2>
 		<div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-			{#each brands as brand}
+			{#each taxonomy.brands as brand}
 				<a
 					href={url(`/parts?brand=${brand.slug}`)}
 					class="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-8 text-xl font-black tracking-tight text-slate-700 shadow-sm transition hover:border-abk-blue hover:text-abk-blue"
@@ -160,6 +163,7 @@
 	<section class="container-page py-16">
 		<div class="mb-8 flex items-end justify-between">
 			<div>
+				<div class="rule-brand mb-3"></div>
 				<p class="text-sm font-bold uppercase tracking-wider text-abk-red">Featured</p>
 				<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">Popular parts</h2>
 			</div>
@@ -221,6 +225,7 @@
 	<section class="container-page py-16">
 		<div class="mb-8 flex items-end justify-between">
 			<div>
+				<div class="rule-brand mb-3"></div>
 				<p class="text-sm font-bold uppercase tracking-wider text-abk-red">New arrivals</p>
 				<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">Recently added</h2>
 			</div>
@@ -243,6 +248,7 @@
 <section class="bg-slate-50 py-16">
 	<div class="container-page">
 		<div class="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-[var(--shadow-card)] sm:p-12">
+			<div class="rule-brand mx-auto mb-3 w-fit"></div>
 			<h2 class="text-3xl font-black tracking-tight text-slate-800">Can't find your part?</h2>
 			<p class="mx-auto mt-3 max-w-2xl text-slate-500">
 				Send us the part number, VIN, or a photo and our team will source it for you and quote a

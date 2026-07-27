@@ -2,8 +2,7 @@
 	import { url } from '$lib/paths';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import { formatPrice } from '$lib/utils';
-	import { brands, categories } from '$lib/config';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import { listParts } from '$lib/db';
 	import { resource } from '$lib/resource.svelte';
 	import type { Part } from '$lib/types';
@@ -18,7 +17,7 @@
 	});
 
 	const byBrand = $derived(
-		brands.map((b) => ({
+		taxonomy.brands.map((b) => ({
 			name: b.name,
 			slug: b.slug,
 			count: all.value.filter((p) => p.brand.slug === b.slug).length
@@ -26,7 +25,7 @@
 	);
 
 	const byCategory = $derived(
-		categories.map((c) => ({
+		taxonomy.categories.map((c) => ({
 			name: c.name,
 			slug: c.slug,
 			icon: c.icon,
@@ -36,6 +35,14 @@
 
 	const recent = $derived(all.value.slice(0, 6));
 
+	/** Shortcuts to the screens staff reach for most often. */
+	const quickLinks = [
+		{ href: '/admin/parts/new', label: 'Add part', hint: 'List a new item', icon: 'plus' },
+		{ href: '/admin/parts', label: 'Manage parts', hint: 'Edit the catalogue', icon: 'part' },
+		{ href: '/admin/brands', label: 'Brands', hint: 'Vehicle brands', icon: 'truck' },
+		{ href: '/admin/categories', label: 'Categories', hint: 'Part categories', icon: 'tag' }
+	] as const;
+
 	const cards = $derived([
 		{ label: 'Total parts', value: stats.total, icon: 'part', accent: 'text-abk-blue bg-abk-sky' },
 		{
@@ -44,7 +51,12 @@
 			icon: 'check',
 			accent: 'text-emerald-700 bg-emerald-50'
 		},
-		{ label: 'Featured', value: stats.featured, icon: 'star', accent: 'text-abk-red bg-red-50' },
+		{
+			label: 'Featured',
+			value: stats.featured,
+			icon: 'star',
+			accent: 'text-abk-red bg-abk-red-soft'
+		},
 		{
 			label: 'On backorder',
 			value: stats.outOfStock,
@@ -62,6 +74,7 @@
 	<div>
 		<h1 class="text-2xl font-black tracking-tight text-slate-800">Dashboard</h1>
 		<p class="text-sm text-slate-500">Overview of your parts catalogue</p>
+		<div class="rule-brand mt-2"></div>
 	</div>
 	<a
 		href={url('/admin/parts/new')}
@@ -77,6 +90,24 @@
 		Couldn't load the catalogue: {all.error}
 	</div>
 {/if}
+
+<!-- Quick links -->
+<div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+	{#each quickLinks as link}
+		<a
+			href={url(link.href)}
+			class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-abk-blue hover:shadow-[var(--shadow-card)]"
+		>
+			<span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-abk-sky text-abk-blue">
+				<Icon name={link.icon} size={18} />
+			</span>
+			<div class="min-w-0">
+				<p class="font-semibold text-slate-800">{link.label}</p>
+				<p class="truncate text-xs text-slate-500">{link.hint}</p>
+			</div>
+		</a>
+	{/each}
+</div>
 
 <!-- Stat cards -->
 <div class="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -152,9 +183,8 @@
 					>
 						<span class="w-28 shrink-0 font-mono text-xs text-slate-400">{part.part_number}</span>
 						<span class="min-w-0 flex-1 truncate font-semibold text-slate-700">{part.name}</span>
-						<span class="hidden text-xs text-slate-400 sm:inline">{part.brand.name}</span>
-						<span class="w-20 text-right text-sm font-bold text-slate-600"
-							>{formatPrice(part.price)}</span
+						<span class="rounded bg-abk-sky px-2 py-0.5 text-[11px] font-bold text-abk-blue"
+							>{part.brand.name}</span
 						>
 						{#if !part.published}
 							<span class="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500"

@@ -1,4 +1,5 @@
-import { site, categories, brands } from './config';
+import { site } from './config';
+import { taxonomy } from './taxonomy.svelte';
 import { url } from './paths';
 import type { Part } from './types';
 
@@ -15,7 +16,10 @@ export interface SeoInput {
 
 /** "<page> | ABK Auto Parts" — or the branded default for the home page. */
 export function pageTitle(title?: string): string {
-	if (!title) return `${site.name} — ${site.tagline} (Toyota, Isuzu, Mitsubishi, Nissan)`;
+	if (!title) {
+		const brandList = taxonomy.brands.map((b) => b.name).join(', ');
+		return `${site.name} — ${site.tagline}${brandList ? ` (${brandList})` : ''}`;
+	}
 	return `${title} | ${site.shortName}`;
 }
 
@@ -52,8 +56,8 @@ export function organizationJsonLd() {
 			addressLocality: site.address.city,
 			addressCountry: site.address.countryCode
 		},
-		brand: brands.map((b) => ({ '@type': 'Brand', name: b.name })),
-		makesOffer: categories.map((c) => ({
+		brand: taxonomy.brands.map((b) => ({ '@type': 'Brand', name: b.name })),
+		makesOffer: taxonomy.categories.map((c) => ({
 			'@type': 'Offer',
 			itemOffered: { '@type': 'Product', category: c.name }
 		}))
@@ -84,17 +88,13 @@ export function productJsonLd(part: Part) {
 		category: part.category.name,
 		brand: { '@type': 'Brand', name: part.brand.name },
 		description: part.description,
-		image: part.images.length ? part.images.map(absoluteUrl) : [absoluteUrl('/og-image.jpg')],
-		offers: {
-			'@type': 'Offer',
-			priceCurrency: part.currency,
-			...(part.price != null ? { price: part.price } : {}),
-			availability: part.in_stock
-				? 'https://schema.org/InStock'
-				: 'https://schema.org/OutOfStock',
-			seller: { '@type': 'Organization', name: site.name },
-			url: absoluteUrl(`/parts/${part.slug}`)
-		}
+		image: part.images.length ? part.images.map(absoluteUrl) : [absoluteUrl('/og-image.jpg')]
+		// No `offers`, deliberately: ABK quotes per enquiry, including export
+		// shipping, so there is no price to publish, and an Offer without one is
+		// not valid structured data — Google's Product guidelines require price
+		// for the Offer to be eligible at all. Availability and a URL alone don't
+		// add up to a valid Offer, so we drop the block entirely rather than
+		// publish a broken one; the rest of the Product schema stands on its own.
 	};
 }
 

@@ -56,12 +56,18 @@
 			{#each nav as item}
 				<a
 					href={url(item.href)}
-					class="rounded-md px-3 py-2 text-sm font-semibold transition-colors {isActive(item.href)
+					class="relative rounded-md px-3 py-2 text-sm font-semibold transition-colors {isActive(
+						item.href
+					)
 						? 'text-abk-blue'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-abk-blue'}"
 					aria-current={isActive(item.href) ? 'page' : undefined}
 				>
 					{item.label}
+					{#if isActive(item.href)}
+						<!-- Red marks "you are here"; blue (above) is reserved for hover. -->
+						<span class="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-abk-red"></span>
+					{/if}
 				</a>
 			{/each}
 		</nav>
@@ -137,9 +143,11 @@
 					<a
 						href={url(item.href)}
 						onclick={() => (menuOpen = false)}
-						class="block rounded-md px-3 py-2.5 text-base font-semibold {isActive(item.href)
-							? 'bg-abk-sky text-abk-blue'
-							: 'text-slate-700 hover:bg-slate-50'}"
+						class="block rounded-md border-l-4 px-3 py-2.5 text-base font-semibold {isActive(
+							item.href
+						)
+							? 'border-abk-red bg-abk-sky text-abk-blue'
+							: 'border-transparent text-slate-700 hover:bg-slate-50'}"
 					>
 						{item.label}
 					</a>

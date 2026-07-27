@@ -1,17 +1,36 @@
+/**
+ * Part categories and vehicle brands are managed in the admin and stored in
+ * Supabase (`part_categories` / `vehicle_brands`). The slug is the identity:
+ * parts reference it, URLs are built from it, and it never changes once
+ * created. See src/lib/taxonomy.svelte.ts.
+ */
 export interface Category {
-	id: string;
 	slug: string;
 	name: string;
 	description: string;
-	/** icon keyword resolved by CategoryIcon.svelte */
+	/** Icon keyword resolved by Icon.svelte — see ICON_CHOICES in taxonomy. */
 	icon: string;
 	sort_order: number;
 }
 
 export interface Brand {
-	id: string;
 	slug: string;
 	name: string;
+	sort_order: number;
+}
+
+/** Fields accepted when creating/editing a category. */
+export interface CategoryInput {
+	name: string;
+	description: string;
+	icon: string;
+	sort_order: number;
+}
+
+/** Fields accepted when creating/editing a vehicle brand. */
+export interface BrandInput {
+	name: string;
+	sort_order: number;
 }
 
 export type PartCondition = 'Genuine' | 'OEM' | 'Aftermarket';
@@ -27,15 +46,18 @@ export interface StaffMember {
 	created_by: string | null;
 }
 
-/** Shape returned to the UI (category/brand flattened to {slug,name}). */
+/**
+ * Shape returned to the UI (category/brand flattened to {slug,name}).
+ *
+ * There is deliberately no price: ABK quotes per enquiry, including export
+ * shipping, so the catalogue never shows or stores one.
+ */
 export interface Part {
 	id: string;
 	slug: string;
 	name: string;
 	part_number: string;
 	description: string;
-	price: number | null;
-	currency: string;
 	condition: PartCondition;
 	/** Original equipment number, if different from part_number. */
 	oem: string | null;
@@ -54,7 +76,6 @@ export interface PartInput {
 	name: string;
 	part_number: string;
 	description: string;
-	price: number | null;
 	condition: PartCondition;
 	oem: string | null;
 	images: string[];
@@ -73,5 +94,5 @@ export interface PartQuery {
 	inStock?: boolean;
 	limit?: number;
 	offset?: number;
-	sort?: 'newest' | 'name' | 'price-asc' | 'price-desc';
+	sort?: 'newest' | 'name' | 'brand';
 }

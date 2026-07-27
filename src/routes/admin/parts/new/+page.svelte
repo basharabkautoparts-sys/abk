@@ -24,6 +24,7 @@
 	<span class="text-slate-800">New</span>
 </nav>
 
-<h1 class="mb-6 text-2xl font-black tracking-tight text-slate-800">Add a new part</h1>
+<h1 class="text-2xl font-black tracking-tight text-slate-800">Add a new part</h1>
+<div class="rule-brand mb-6 mt-2"></div>
 
 <PartForm values={emptyPartValues()} submitLabel="Create part" {demoMode} {save} />

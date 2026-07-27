@@ -1,5 +1,6 @@
 import type { LayoutLoad } from './$types';
 import { isSupabaseConfigured } from '$lib/supabase';
+import { ensureTaxonomy } from '$lib/taxonomy.svelte';
 
 /**
  * Everything is prerendered to static HTML at build time. Individual routes opt
@@ -16,6 +17,14 @@ export const prerender = true;
  */
 export const trailingSlash = 'always';
 
-export const load: LayoutLoad = () => {
+/**
+ * Load the brand/category taxonomy before anything renders. Every page reads it
+ * — navigation, filters, category cards — so resolving it once here, above all
+ * of them, is what lets components treat it as plain synchronous data. During
+ * the build this bakes the live lists into the static HTML; in the browser it
+ * runs once on hydration.
+ */
+export const load: LayoutLoad = async () => {
+	await ensureTaxonomy();
 	return { demoMode: !isSupabaseConfigured };
 };

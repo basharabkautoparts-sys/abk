@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { asset, url } from '$lib/paths';
-	import { brands, features, site } from '$lib/config';
+	import { features, site } from '$lib/config';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import { breadcrumbJsonLd } from '$lib/seo';
@@ -25,6 +26,7 @@
 
 <section class="container-page grid gap-12 py-16 lg:grid-cols-2">
 	<div>
+		<div class="rule-brand mb-3"></div>
 		<h2 class="text-3xl font-black tracking-tight text-slate-800">Who we are</h2>
 		<div class="mt-4 space-y-4 leading-relaxed text-slate-600">
 			<p>
@@ -66,6 +68,7 @@
 <section class="bg-slate-50 py-16">
 	<div class="container-page">
 		<div class="text-center">
+			<div class="rule-brand mx-auto mb-3 w-fit"></div>
 			<h2 class="text-3xl font-black tracking-tight text-slate-800">What we stand for</h2>
 		</div>
 		<div class="mt-10 grid gap-6 sm:grid-cols-3">
@@ -86,9 +89,10 @@
 
 <!-- Brands -->
 <section class="container-page py-16 text-center">
+	<div class="rule-brand mx-auto mb-3 w-fit"></div>
 	<h2 class="text-2xl font-black tracking-tight text-slate-800">Vehicle brands we cover</h2>
 	<div class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-		{#each brands as brand}
+		{#each taxonomy.brands as brand}
 			<div
 				class="flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-8 text-xl font-black text-slate-700 shadow-sm"
 			>

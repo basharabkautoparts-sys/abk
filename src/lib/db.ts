@@ -1,5 +1,5 @@
 import type { Part, PartInput, PartQuery } from './types';
-import { brandBySlug, categoryBySlug } from './config';
+import { brandName, categoryName, ensureTaxonomy } from './taxonomy.svelte';
 import { SEED_PARTS } from './data/seed';
 import { slugify } from './utils';
 import { supabase } from './supabase';
@@ -7,32 +7,34 @@ import { supabase } from './supabase';
 const TABLE = 'parts';
 
 const COLUMNS =
-	'id,slug,name,part_number,description,price,currency,condition,oem,images,in_stock,featured,published,category_slug,brand_slug,created_at,updated_at';
+	'id,slug,name,part_number,description,condition,oem,images,in_stock,featured,published,category_slug,brand_slug,created_at,updated_at';
 
 /* --------------------------------------------------------------------------
- * Row mapping (DB row -> UI Part). Category/brand names come from static config.
+ * Row mapping (DB row -> UI Part).
+ *
+ * A part row stores only the category/brand slug; the display names are looked
+ * up in the taxonomy, which every query below loads first. An unknown slug
+ * falls back to the slug itself rather than rendering blank — that can only
+ * happen if a taxonomy row was deleted out from under a part, and showing
+ * "body-parts" is a better failure than showing nothing.
  * ------------------------------------------------------------------------ */
 function mapRow(row: Record<string, unknown>): Part {
 	const categorySlug = String(row.category_slug ?? '');
 	const brandSlug = String(row.brand_slug ?? '');
-	const cat = categoryBySlug(categorySlug);
-	const brand = brandBySlug(brandSlug);
 	return {
 		id: String(row.id),
 		slug: String(row.slug),
 		name: String(row.name),
 		part_number: String(row.part_number ?? ''),
 		description: String(row.description ?? ''),
-		price: row.price == null ? null : Number(row.price),
-		currency: String(row.currency ?? 'THB'),
 		condition: (row.condition as Part['condition']) ?? 'Genuine',
 		oem: (row.oem as string) ?? null,
 		images: Array.isArray(row.images) ? (row.images as string[]) : [],
 		in_stock: Boolean(row.in_stock),
 		featured: Boolean(row.featured),
 		published: Boolean(row.published),
-		category: { slug: categorySlug, name: cat?.name ?? categorySlug },
-		brand: { slug: brandSlug, name: brand?.name ?? brandSlug },
+		category: { slug: categorySlug, name: categoryName(categorySlug) },
+		brand: { slug: brandSlug, name: brandName(brandSlug) },
 		created_at: String(row.created_at ?? ''),
 		updated_at: String(row.updated_at ?? '')
 	};
@@ -53,10 +55,10 @@ export function sortParts(list: Part[], sort: PartQuery['sort']): Part[] {
 	switch (sort) {
 		case 'name':
 			return arr.sort((a, b) => a.name.localeCompare(b.name));
-		case 'price-asc':
-			return arr.sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity));
-		case 'price-desc':
-			return arr.sort((a, b) => (b.price ?? -Infinity) - (a.price ?? -Infinity));
+		case 'brand':
+			return arr.sort(
+				(a, b) => a.brand.name.localeCompare(b.brand.name) || a.name.localeCompare(b.name)
+			);
 		default:
 			return arr.sort((a, b) => b.created_at.localeCompare(a.created_at));
 	}
@@ -86,10 +88,19 @@ export function filterParts(list: Part[], q: PartQuery, admin = false): Part[] {
 
 /** Count published parts per category slug (for catalogue/category cards). */
 export function countByCategory(list: Part[]): Record<string, number> {
+	return tally(list, (p) => p.category.slug);
+}
+
+/** Count published parts per brand slug (for the brand strip and filters). */
+export function countByBrand(list: Part[]): Record<string, number> {
+	return tally(list, (p) => p.brand.slug);
+}
+
+function tally(list: Part[], key: (p: Part) => string): Record<string, number> {
 	const counts: Record<string, number> = {};
 	for (const p of list) {
 		if (!p.published) continue;
-		counts[p.category.slug] = (counts[p.category.slug] ?? 0) + 1;
+		counts[key(p)] = (counts[key(p)] ?? 0) + 1;
 	}
 	return counts;
 }
@@ -103,6 +114,7 @@ export async function listParts(
 	opts: { admin?: boolean } = {}
 ): Promise<Part[]> {
 	const admin = opts.admin ?? false;
+	await ensureTaxonomy();
 	const db = supabase();
 	if (!db) return filterParts(store(), q, admin);
 
@@ -125,11 +137,13 @@ export async function listParts(
 		case 'name':
 			builder = builder.order('name', { ascending: true });
 			break;
-		case 'price-asc':
-			builder = builder.order('price', { ascending: true, nullsFirst: false });
-			break;
-		case 'price-desc':
-			builder = builder.order('price', { ascending: false, nullsFirst: false });
+		case 'brand':
+			// Ordering by slug, not display name: the name lives in another table
+			// and PostgREST cannot sort by it without an embed. The slug is coined
+			// from the name, so the two only diverge for a brand that was renamed
+			// after creation — close enough for a sort, and it keeps paging
+			// correct, which sorting the mapped rows afterwards would not.
+			builder = builder.order('brand_slug', { ascending: true }).order('name', { ascending: true });
 			break;
 		default:
 			builder = builder.order('created_at', { ascending: false });
@@ -148,6 +162,7 @@ export async function getPartBySlug(
 	opts: { admin?: boolean } = {}
 ): Promise<Part | null> {
 	const admin = opts.admin ?? false;
+	await ensureTaxonomy();
 	const db = supabase();
 	if (!db) return store().find((p) => p.slug === slug && (admin || p.published)) ?? null;
 
@@ -159,6 +174,7 @@ export async function getPartBySlug(
 }
 
 export async function getPartById(id: string): Promise<Part | null> {
+	await ensureTaxonomy();
 	const db = supabase();
 	if (!db) return store().find((p) => p.id === id) ?? null;
 	const { data, error } = await db.from(TABLE).select(COLUMNS).eq('id', id).maybeSingle();
@@ -186,17 +202,14 @@ export async function createPart(input: PartInput): Promise<Part> {
 
 	if (!db) {
 		const now = new Date().toISOString();
-		const cat = categoryBySlug(input.category_slug);
-		const brand = brandBySlug(input.brand_slug);
 		const part: Part = {
 			id: `demo-${slug}`,
 			slug,
-			currency: 'THB',
 			created_at: now,
 			updated_at: now,
 			...input,
-			category: { slug: input.category_slug, name: cat?.name ?? input.category_slug },
-			brand: { slug: input.brand_slug, name: brand?.name ?? input.brand_slug }
+			category: { slug: input.category_slug, name: categoryName(input.category_slug) },
+			brand: { slug: input.brand_slug, name: brandName(input.brand_slug) }
 		};
 		store().unshift(part);
 		return part;
@@ -209,8 +222,6 @@ export async function createPart(input: PartInput): Promise<Part> {
 			name: input.name,
 			part_number: input.part_number,
 			description: input.description,
-			price: input.price,
-			currency: 'THB',
 			condition: input.condition,
 			oem: input.oem,
 			images: input.images,
@@ -227,19 +238,18 @@ export async function createPart(input: PartInput): Promise<Part> {
 }
 
 export async function updatePart(id: string, input: PartInput): Promise<Part> {
+	await ensureTaxonomy();
 	const db = supabase();
 
 	if (!db) {
 		const list = store();
 		const idx = list.findIndex((p) => p.id === id);
 		if (idx === -1) throw new Error('Part not found');
-		const cat = categoryBySlug(input.category_slug);
-		const brand = brandBySlug(input.brand_slug);
 		const updated: Part = {
 			...list[idx],
 			...input,
-			category: { slug: input.category_slug, name: cat?.name ?? input.category_slug },
-			brand: { slug: input.brand_slug, name: brand?.name ?? input.brand_slug },
+			category: { slug: input.category_slug, name: categoryName(input.category_slug) },
+			brand: { slug: input.brand_slug, name: brandName(input.brand_slug) },
 			updated_at: new Date().toISOString()
 		};
 		list[idx] = updated;
@@ -252,7 +262,6 @@ export async function updatePart(id: string, input: PartInput): Promise<Part> {
 			name: input.name,
 			part_number: input.part_number,
 			description: input.description,
-			price: input.price,
 			condition: input.condition,
 			oem: input.oem,
 			images: input.images,

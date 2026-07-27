@@ -258,7 +258,7 @@ the **Deploy to GitHub Pages** workflow from the Actions tab.
 - Per-page `<title>`, meta description, canonical URL, Open Graph + Twitter
   cards via `src/lib/components/Seo.svelte`.
 - **JSON-LD structured data:** `AutoPartsStore` + `WebSite` (home), `Product`
-  with price/availability (part pages), and `BreadcrumbList`.
+  with availability (part pages), and `BreadcrumbList`.
 - **`/sitemap.xml`** generated from the live catalogue at build time,
   **`/robots.txt`** (disallows `/admin`), and social image `/og-image.jpg`.
 - Search-result pages (`?q=`) are `noindex`.
@@ -287,18 +287,36 @@ Phone and WhatsApp are already set from the brand artwork.
 
 ## Editing the brand / contact details
 
-Everything brand-specific lives in **`src/lib/config.ts`**: company name,
-tagline, phone, WhatsApp, email, address, vehicle brands, part categories and
-navigation. The part **categories** and vehicle **brands** are intentionally
-fixed here (not database tables), so the `parts` table stays the single thing
-you manage.
+Company name, tagline, phone, WhatsApp, email, address and navigation live in
+**`src/lib/config.ts`** — changing them needs a deploy.
+
+**Vehicle brands and part categories do not.** They are database tables
+(`vehicle_brands`, `part_categories`) managed from **/admin/brands** and
+**/admin/categories**. `config.ts` still carries the starting lists, as
+`DEFAULT_BRANDS` / `DEFAULT_CATEGORIES`: they seed a fresh database and are what
+demo mode runs on, but the live site reads `src/lib/taxonomy.svelte.ts`.
+
+A brand or category is identified by its **slug**, which is generated from the
+name when it is created and never changes afterwards — every part row points at
+it. Renaming "Isuzu" changes the label everywhere; the URL
+`/parts/?brand=isuzu` keeps working. A row that still has parts assigned to it
+cannot be deleted: the foreign key refuses, and the admin says so.
+
+## No prices, on purpose
+
+The catalogue neither stores nor shows a price. ABK quotes per enquiry —
+including export shipping — so the call to action is WhatsApp or a phone call,
+and a stored price could only ever be stale or misleading. There is no price
+field in the admin, no price column in the database, and no `price` in the
+Product structured data.
 
 ## Project structure
 
 ```
 src/
   lib/
-    config.ts            Brand, contact, categories, brands, nav
+    config.ts            Brand, contact, nav + the default brand/category lists
+    taxonomy.svelte.ts   Live vehicle brands + part categories (load, CRUD, lookup)
     supabase.ts          Isomorphic client (build time + browser); demo-mode flag
     db.ts                Catalogue queries, mutations, client-side filtering
     auth.svelte.ts       Browser-side staff session + role (Supabase Auth or demo)
@@ -310,7 +328,7 @@ src/
     query.ts             Prerender-safe query string + path helpers
     seo.ts               Meta + JSON-LD helpers
     types.ts             Domain types
-    utils.ts             slugify, price formatting
+    utils.ts             slugify, truncate
     data/seed.ts         Bundled sample catalogue (demo mode)
     components/          Header, Footer, PartCard, PartForm, Icon, Seo, …
   routes/
@@ -319,9 +337,10 @@ src/
     parts/               Catalogue + [slug] detail (slugs enumerated at build)
     about/  contact/
     sitemap.xml/  robots.txt/
-    admin/               Login, dashboard, parts CRUD, staff — browser-only
+    admin/               Login, dashboard, parts CRUD, brands, categories,
+                         staff — browser-only
 supabase/
-  schema.sql             Tables, RLS, storage bucket
+  schema.sql             Tables (parts, taxonomy, staff), RLS, storage bucket
   seed.sql               Sample catalogue
 static/
   .nojekyll              Stops Pages hiding the _app/ directory

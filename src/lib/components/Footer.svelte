@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { asset, url } from '$lib/paths';
-	import { brands, categories, nav, site } from '$lib/config';
+	import { nav, site } from '$lib/config';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import Icon from './Icon.svelte';
 
 	const year = new Date().getFullYear();
 </script>
 
-<footer class="mt-20 bg-abk-navy text-slate-300">
+<footer class="mt-20 border-t-2 border-abk-red bg-abk-navy text-slate-300">
 	<div class="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
 		<!-- Brand + contact -->
 		<div class="lg:col-span-1">
@@ -57,7 +58,7 @@
 		<div>
 			<h3 class="text-sm font-bold uppercase tracking-wider text-white">Parts</h3>
 			<ul class="mt-4 space-y-2.5 text-sm">
-				{#each categories.slice(0, 6) as cat}
+				{#each taxonomy.categories.slice(0, 6) as cat}
 					<li>
 						<a href={url(`/parts?category=${cat.slug}`)} class="text-slate-400 hover:text-white"
 							>{cat.name}</a
@@ -71,7 +72,7 @@
 		<div>
 			<h3 class="text-sm font-bold uppercase tracking-wider text-white">Vehicle Brands</h3>
 			<ul class="mt-4 space-y-2.5 text-sm">
-				{#each brands as brand}
+				{#each taxonomy.brands as brand}
 					<li>
 						<a href={url(`/parts?brand=${brand.slug}`)} class="text-slate-400 hover:text-white"
 							>{brand.name}</a
@@ -84,7 +85,7 @@
 					href={site.social.facebook}
 					target="_blank"
 					rel="noopener"
-					class="mt-5 inline-flex items-center gap-2 text-slate-400 hover:text-white"
+					class="mt-5 inline-flex items-center gap-2 text-slate-400 hover:text-abk-red"
 				>
 					<Icon name="facebook" size={20} /> Facebook
 				</a>

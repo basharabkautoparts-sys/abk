@@ -2,7 +2,7 @@
 	import { url } from '$lib/paths';
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
-	import { brands, categories, categoryBySlug, brandBySlug } from '$lib/config';
+	import { taxonomy, categoryBySlug, brandBySlug } from '$lib/taxonomy.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
@@ -14,7 +14,7 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const SORTS = ['newest', 'name', 'price-asc', 'price-desc'] as const;
+	const SORTS = ['newest', 'name', 'brand'] as const;
 	type Sort = (typeof SORTS)[number];
 
 	/**
@@ -148,10 +148,20 @@
 				<Icon name="chevron" size={14} />
 				<span class="text-white">{activeCategory.name}</span>
 			{/if}
+			{#if activeBrand}
+				<Icon name="chevron" size={14} />
+				<span class="text-white">{activeBrand.name}</span>
+			{/if}
 		</nav>
 		<h1 class="text-3xl font-black tracking-tight sm:text-4xl">{heading}</h1>
 		<p class="mt-2 text-white/80">
 			{parts.length} part{parts.length === 1 ? '' : 's'} available
+			<!-- The heading above collapses to the category name when both a category
+			     and a brand are active, so the brand filter needs its own callout here
+			     — otherwise it is only visible as a removable chip further down. -->
+			{#if activeBrand}
+				for <span class="font-bold text-white">{activeBrand.name}</span>
+			{/if}
 		</p>
 	</div>
 </section>
@@ -166,6 +176,7 @@
 			<input type="hidden" name="sort" value={filters.sort} />
 
 			<div>
+				<div class="rule-brand mb-2"></div>
 				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Search</h2>
 				<div class="relative">
 					<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
@@ -195,7 +206,7 @@
 							All categories
 						</a>
 					</li>
-					{#each categories as cat}
+					{#each taxonomy.categories as cat}
 						<li>
 							<a
 								href={url(buildUrl({ category: cat.slug }))}
@@ -213,7 +224,12 @@
 			</div>
 
 			<div>
-				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Brand</h2>
+				<!-- Bolder and blue, with a vehicle icon, so this reads as more than
+				     another filter group — a customer must always be able to tell
+				     which vehicle brand a part fits. -->
+				<h2 class="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-abk-blue">
+					<Icon name="truck" size={14} /> Brand
+				</h2>
 				<ul class="space-y-0.5 text-sm">
 					<li>
 						<a
@@ -225,7 +241,7 @@
 							All brands
 						</a>
 					</li>
-					{#each brands as brand}
+					{#each taxonomy.brands as brand}
 						<li>
 							<a
 								href={url(buildUrl({ brand: brand.slug }))}
@@ -286,7 +302,7 @@
 			<div class="flex items-center gap-2 text-sm">
 				<span class="text-slate-400">Sort</span>
 				<div class="flex overflow-hidden rounded-lg border border-slate-200">
-					{#each [{ v: 'newest', l: 'Newest' }, { v: 'name', l: 'Name' }, { v: 'price-asc', l: 'Price ↑' }, { v: 'price-desc', l: 'Price ↓' }] as opt}
+					{#each [{ v: 'newest', l: 'Newest' }, { v: 'name', l: 'Name' }, { v: 'brand', l: 'Brand' }] as opt}
 						<a
 							href={url(buildUrl({ sort: opt.v as Sort }))}
 							class="px-3 py-1.5 text-xs font-semibold {filters.sort === opt.v

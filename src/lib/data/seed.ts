@@ -1,5 +1,5 @@
 import type { Part, PartCondition } from '$lib/types';
-import { brandBySlug, categoryBySlug } from '$lib/config';
+import { brandBySlug, categoryBySlug } from '$lib/taxonomy.svelte';
 
 interface RawPart {
 	slug: string;
@@ -7,7 +7,6 @@ interface RawPart {
 	part_number: string;
 	oem?: string;
 	description: string;
-	price: number | null;
 	condition?: PartCondition;
 	category_slug: string;
 	brand_slug: string;
@@ -24,7 +23,6 @@ const RAW: RawPart[] = [
 		oem: '43512-0K060',
 		description:
 			'Genuine ventilated front brake disc for Toyota Hilux Revo. Precision-balanced for smooth, judder-free braking and long pad life.',
-		price: 1850,
 		category_slug: 'brake-differential',
 		brand_slug: 'toyota',
 		featured: true,
@@ -37,7 +35,6 @@ const RAW: RawPart[] = [
 		oem: '04152-YZZA1',
 		description:
 			'OEM cartridge-type oil filter element for a wide range of Toyota engines. High-efficiency media protects your engine between services.',
-		price: 220,
 		category_slug: 'filters',
 		brand_slug: 'toyota',
 		featured: true,
@@ -49,7 +46,6 @@ const RAW: RawPart[] = [
 		part_number: '48510-0K530',
 		description:
 			'Gas-charged front shock absorber engineered for Toyota Fortuner. Restores factory ride comfort and stability under load.',
-		price: 2650,
 		category_slug: 'suspension-steering',
 		brand_slug: 'toyota',
 		day: 6
@@ -60,7 +56,6 @@ const RAW: RawPart[] = [
 		part_number: '90919-01253',
 		description:
 			'Long-life iridium spark plugs for reliable ignition, smoother idle and improved fuel economy. Sold as a set of four.',
-		price: 1280,
 		category_slug: 'electrical-ignition',
 		brand_slug: 'toyota',
 		day: 8
@@ -71,7 +66,6 @@ const RAW: RawPart[] = [
 		part_number: '8-98088-965-0',
 		description:
 			'Genuine clutch friction disc for Isuzu D-Max 2.5 DDi. Consistent engagement and durable facing for heavy-duty use.',
-		price: 3100,
 		category_slug: 'clutch-drivetrain',
 		brand_slug: 'isuzu',
 		featured: true,
@@ -83,7 +77,6 @@ const RAW: RawPart[] = [
 		part_number: '8-98139-073-0',
 		description:
 			'High-flow air filter for Isuzu D-Max and MU-X. Traps fine dust to protect the intake and keep the turbo breathing clean.',
-		price: 640,
 		category_slug: 'filters',
 		brand_slug: 'isuzu',
 		day: 11
@@ -94,7 +87,6 @@ const RAW: RawPart[] = [
 		part_number: '8-98037-014-0',
 		description:
 			'Diesel fuel filter element that separates water and contaminants, safeguarding the common-rail injection system.',
-		price: 780,
 		category_slug: 'filters',
 		brand_slug: 'isuzu',
 		day: 12
@@ -105,7 +97,6 @@ const RAW: RawPart[] = [
 		part_number: '8-97235-197-0',
 		description:
 			'Outer tie rod end with hardened ball stud for precise steering response on Isuzu light trucks.',
-		price: 520,
 		category_slug: 'suspension-steering',
 		brand_slug: 'isuzu',
 		day: 13
@@ -116,7 +107,6 @@ const RAW: RawPart[] = [
 		part_number: '4605B455',
 		description:
 			'Genuine front brake pad set for Mitsubishi Triton. Low-noise, low-dust compound with strong stopping power.',
-		price: 1450,
 		category_slug: 'brake-differential',
 		brand_slug: 'mitsubishi',
 		featured: true,
@@ -128,7 +118,6 @@ const RAW: RawPart[] = [
 		part_number: '4013A272',
 		description:
 			'Lower control-arm ball joint for Mitsubishi Pajero Sport. Sealed and pre-greased for long service life.',
-		price: 890,
 		category_slug: 'suspension-steering',
 		brand_slug: 'mitsubishi',
 		day: 15
@@ -139,7 +128,6 @@ const RAW: RawPart[] = [
 		part_number: '1832A044',
 		description:
 			'Direct-fit ignition coil delivering a strong, stable spark for Mitsubishi petrol engines.',
-		price: 1650,
 		category_slug: 'electrical-ignition',
 		brand_slug: 'mitsubishi',
 		day: 16
@@ -150,7 +138,6 @@ const RAW: RawPart[] = [
 		part_number: '7803A028',
 		description:
 			'Activated cabin air filter that keeps dust, pollen and odours out of the interior airflow.',
-		price: 380,
 		category_slug: 'filters',
 		brand_slug: 'mitsubishi',
 		day: 17
@@ -161,7 +148,6 @@ const RAW: RawPart[] = [
 		part_number: '39100-EB70A',
 		description:
 			'Outer constant-velocity joint kit with boot and grease for Nissan Navara. Smooth power delivery to the wheels.',
-		price: 2950,
 		category_slug: 'clutch-drivetrain',
 		brand_slug: 'nissan',
 		featured: true,
@@ -173,7 +159,6 @@ const RAW: RawPart[] = [
 		part_number: '54010-EB31A',
 		description:
 			'Front suspension coil spring matched to Nissan Navara load ratings for consistent ride height.',
-		price: 1750,
 		category_slug: 'suspension-steering',
 		brand_slug: 'nissan',
 		day: 19
@@ -184,7 +169,6 @@ const RAW: RawPart[] = [
 		part_number: '15208-65F0A',
 		description:
 			'Spin-on oil filter with anti-drainback valve for reliable cold-start protection on Nissan engines.',
-		price: 260,
 		category_slug: 'filters',
 		brand_slug: 'nissan',
 		day: 20
@@ -195,7 +179,6 @@ const RAW: RawPart[] = [
 		part_number: '46010-EB70B',
 		description:
 			'Genuine brake master cylinder providing firm, consistent pedal feel and reliable hydraulic pressure.',
-		price: 3450,
 		category_slug: 'brake-differential',
 		brand_slug: 'nissan',
 		day: 21
@@ -206,7 +189,6 @@ const RAW: RawPart[] = [
 		part_number: '81550-0K400',
 		description:
 			'Right-hand rear tail lamp assembly for Toyota Hilux Revo. Direct OE replacement with correct fit and lens clarity.',
-		price: 2200,
 		category_slug: 'body-parts',
 		brand_slug: 'toyota',
 		day: 22
@@ -217,7 +199,6 @@ const RAW: RawPart[] = [
 		part_number: '8-98201-234-0',
 		description:
 			'Left-hand headlamp assembly for Isuzu D-Max with precise beam pattern and OE-grade housing.',
-		price: 4100,
 		category_slug: 'body-parts',
 		brand_slug: 'isuzu',
 		day: 23
@@ -234,8 +215,6 @@ function build(raw: RawPart): Part {
 		name: raw.name,
 		part_number: raw.part_number,
 		description: raw.description,
-		price: raw.price,
-		currency: 'THB',
 		condition: raw.condition ?? 'Genuine',
 		oem: raw.oem ?? null,
 		images: [],

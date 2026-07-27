@@ -72,18 +72,23 @@ export const nav = [
 	{ label: 'Contact', href: '/contact' }
 ] as const;
 
-/** Vehicle brands ABK supplies (from the artwork). */
-export const brands: Brand[] = [
-	{ id: 'toyota', slug: 'toyota', name: 'Toyota' },
-	{ id: 'isuzu', slug: 'isuzu', name: 'Isuzu' },
-	{ id: 'mitsubishi', slug: 'mitsubishi', name: 'Mitsubishi' },
-	{ id: 'nissan', slug: 'nissan', name: 'Nissan' }
+/**
+ * Vehicle brands and part categories are managed in the admin (Supabase tables
+ * `vehicle_brands` / `part_categories`). The lists below are only the starting
+ * point: they seed a fresh database, and they are what demo mode — and any page
+ * rendered before the tables have loaded — falls back to. Read the live lists
+ * from src/lib/taxonomy.svelte.ts, never from here.
+ */
+export const DEFAULT_BRANDS: Brand[] = [
+	{ slug: 'toyota', name: 'Toyota', sort_order: 1 },
+	{ slug: 'isuzu', name: 'Isuzu', sort_order: 2 },
+	{ slug: 'mitsubishi', name: 'Mitsubishi', sort_order: 3 },
+	{ slug: 'nissan', name: 'Nissan', sort_order: 4 }
 ];
 
-/** Part categories. Icons map to CategoryIcon.svelte. */
-export const categories: Category[] = [
+/** Part categories. Icons map to Icon.svelte. */
+export const DEFAULT_CATEGORIES: Category[] = [
 	{
-		id: 'engine-transmission',
 		slug: 'engine-transmission',
 		name: 'Engine & Transmission',
 		description: 'Pistons, gaskets, timing kits, mounts and transmission components.',
@@ -91,7 +96,6 @@ export const categories: Category[] = [
 		sort_order: 1
 	},
 	{
-		id: 'brake-differential',
 		slug: 'brake-differential',
 		name: 'Brake & Differential',
 		description: 'Brake discs, pads, calipers, master cylinders and differential parts.',
@@ -99,7 +103,6 @@ export const categories: Category[] = [
 		sort_order: 2
 	},
 	{
-		id: 'suspension-steering',
 		slug: 'suspension-steering',
 		name: 'Suspension & Steering',
 		description: 'Shock absorbers, coil springs, ball joints, tie rod ends and bushings.',
@@ -107,7 +110,6 @@ export const categories: Category[] = [
 		sort_order: 3
 	},
 	{
-		id: 'filters',
 		slug: 'filters',
 		name: 'Filters',
 		description: 'Oil, air, fuel and cabin filters for every service interval.',
@@ -115,7 +117,6 @@ export const categories: Category[] = [
 		sort_order: 4
 	},
 	{
-		id: 'clutch-drivetrain',
 		slug: 'clutch-drivetrain',
 		name: 'Clutch & Drivetrain',
 		description: 'Clutch discs, pressure plates, CV joints, axles and bearings.',
@@ -123,7 +124,6 @@ export const categories: Category[] = [
 		sort_order: 5
 	},
 	{
-		id: 'electrical-ignition',
 		slug: 'electrical-ignition',
 		name: 'Electrical & Ignition',
 		description: 'Spark plugs, ignition coils, sensors, alternators and starters.',
@@ -131,7 +131,6 @@ export const categories: Category[] = [
 		sort_order: 6
 	},
 	{
-		id: 'body-parts',
 		slug: 'body-parts',
 		name: 'Body Parts',
 		description: 'Lamps, mirrors, panels, grilles and exterior trim.',
@@ -139,9 +138,6 @@ export const categories: Category[] = [
 		sort_order: 7
 	}
 ];
-
-export const categoryBySlug = (slug: string) => categories.find((c) => c.slug === slug);
-export const brandBySlug = (slug: string) => brands.find((b) => b.slug === slug);
 
 /** Build a prefilled WhatsApp inquiry link for a specific part. */
 export function whatsappInquiry(partName?: string, partNumber?: string): string {

@@ -66,6 +66,7 @@
 	<div>
 		<h1 class="text-2xl font-black tracking-tight text-slate-800">Staff</h1>
 		<p class="text-sm text-slate-500">Who may sign in and manage the catalogue</p>
+		<div class="rule-brand mt-2"></div>
 	</div>
 </div>
 

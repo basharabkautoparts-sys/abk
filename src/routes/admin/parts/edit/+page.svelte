@@ -69,7 +69,10 @@
 	</div>
 {:else}
 	<div class="mb-6 flex flex-wrap items-center justify-between gap-3">
-		<h1 class="text-2xl font-black tracking-tight text-slate-800">Edit part</h1>
+		<div>
+			<h1 class="text-2xl font-black tracking-tight text-slate-800">Edit part</h1>
+			<div class="rule-brand mt-2"></div>
+		</div>
 		<a
 			href={url(`/parts/${part.value.slug}`)}
 			target="_blank"

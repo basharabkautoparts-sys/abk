@@ -1,5 +1,5 @@
 import type { Part, PartCondition, PartInput } from './types';
-import { brandBySlug, categoryBySlug } from './config';
+import { brandBySlug, categoryBySlug } from './taxonomy.svelte';
 import { PART_IMAGES_BUCKET, supabase } from './supabase';
 
 const CONDITIONS: PartCondition[] = ['Genuine', 'OEM', 'Aftermarket'];
@@ -9,7 +9,6 @@ export interface PartFormValues {
 	name: string;
 	part_number: string;
 	description: string;
-	price: string;
 	condition: string;
 	oem: string;
 	category_slug: string;
@@ -32,7 +31,6 @@ export function emptyPartValues(): PartFormValues {
 		name: '',
 		part_number: '',
 		description: '',
-		price: '',
 		condition: 'Genuine',
 		oem: '',
 		category_slug: '',
@@ -49,7 +47,6 @@ export function valuesFromPart(part: Part): PartFormValues {
 		name: part.name,
 		part_number: part.part_number,
 		description: part.description,
-		price: part.price != null ? String(part.price) : '',
 		condition: part.condition,
 		oem: part.oem ?? '',
 		category_slug: part.category.slug,
@@ -73,7 +70,6 @@ export async function parsePartForm(form: FormData): Promise<ParseResult> {
 		name: get('name'),
 		part_number: get('part_number'),
 		description: get('description'),
-		price: get('price'),
 		condition: get('condition') || 'Genuine',
 		oem: get('oem'),
 		category_slug: get('category_slug'),
@@ -93,13 +89,6 @@ export async function parsePartForm(form: FormData): Promise<ParseResult> {
 	if (!values.part_number) errors.part_number = 'Part number is required.';
 	if (!categoryBySlug(values.category_slug)) errors.category_slug = 'Choose a category.';
 	if (!brandBySlug(values.brand_slug)) errors.brand_slug = 'Choose a brand.';
-
-	let price: number | null = null;
-	if (values.price) {
-		const n = Number(values.price.replace(/,/g, ''));
-		if (Number.isNaN(n) || n < 0) errors.price = 'Enter a valid price, or leave blank.';
-		else price = n;
-	}
 
 	const condition = (
 		CONDITIONS.includes(values.condition as PartCondition) ? values.condition : 'Genuine'
@@ -144,7 +133,6 @@ export async function parsePartForm(form: FormData): Promise<ParseResult> {
 		name: values.name,
 		part_number: values.part_number,
 		description: values.description,
-		price,
 		condition,
 		oem: values.oem || null,
 		images: values.images,

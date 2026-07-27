@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { url } from '$lib/paths';
 	import { untrack } from 'svelte';
-	import { brands, categories } from '$lib/config';
+	import { taxonomy } from '$lib/taxonomy.svelte';
 	import type { PartFormValues } from '$lib/partForm';
 	import Icon from './Icon.svelte';
 
@@ -116,16 +116,27 @@
 				<label for="category_slug" class="mb-1 block text-sm font-semibold text-slate-700"
 					>Category *</label
 				>
-				<select
-					id="category_slug"
-					name="category_slug"
-					class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
-				>
-					<option value="" disabled selected={!values.category_slug}>Select a category…</option>
-					{#each categories as cat}
-						<option value={cat.slug} selected={values.category_slug === cat.slug}>{cat.name}</option>
-					{/each}
-				</select>
+				{#if taxonomy.categories.length}
+					<select
+						id="category_slug"
+						name="category_slug"
+						class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
+					>
+						<option value="" disabled selected={!values.category_slug}>Select a category…</option>
+						{#each taxonomy.categories as cat}
+							<option value={cat.slug} selected={values.category_slug === cat.slug}>{cat.name}</option
+							>
+						{/each}
+					</select>
+				{:else}
+					<p
+						class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"
+					>
+						No categories yet. <a href={url('/admin/categories')} class="font-semibold text-abk-blue hover:underline"
+							>Add one</a
+						> before creating parts.
+					</p>
+				{/if}
 				{#if fieldError('category_slug')}<p class="mt-1 text-xs text-red-600">
 						{fieldError('category_slug')}
 					</p>{/if}
@@ -135,37 +146,30 @@
 				<label for="brand_slug" class="mb-1 block text-sm font-semibold text-slate-700"
 					>Vehicle brand *</label
 				>
-				<select
-					id="brand_slug"
-					name="brand_slug"
-					class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
-				>
-					<option value="" disabled selected={!values.brand_slug}>Select a brand…</option>
-					{#each brands as brand}
-						<option value={brand.slug} selected={values.brand_slug === brand.slug}>{brand.name}</option
-						>
-					{/each}
-				</select>
+				{#if taxonomy.brands.length}
+					<select
+						id="brand_slug"
+						name="brand_slug"
+						class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
+					>
+						<option value="" disabled selected={!values.brand_slug}>Select a brand…</option>
+						{#each taxonomy.brands as brand}
+							<option value={brand.slug} selected={values.brand_slug === brand.slug}>{brand.name}</option
+							>
+						{/each}
+					</select>
+				{:else}
+					<p
+						class="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"
+					>
+						No brands yet. <a href={url('/admin/brands')} class="font-semibold text-abk-blue hover:underline"
+							>Add one</a
+						> before creating parts.
+					</p>
+				{/if}
 				{#if fieldError('brand_slug')}<p class="mt-1 text-xs text-red-600">
 						{fieldError('brand_slug')}
 					</p>{/if}
-			</div>
-
-			<div>
-				<label for="price" class="mb-1 block text-sm font-semibold text-slate-700"
-					>Price (THB) <span class="font-normal text-slate-400">(blank = on request)</span></label
-				>
-				<input
-					id="price"
-					name="price"
-					type="number"
-					min="0"
-					step="1"
-					value={values.price}
-					placeholder="1850"
-					class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
-				/>
-				{#if fieldError('price')}<p class="mt-1 text-xs text-red-600">{fieldError('price')}</p>{/if}
 			</div>
 
 			<div>

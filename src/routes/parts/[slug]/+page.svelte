@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { url } from '$lib/paths';
 	import type { PageData } from './$types';
-	import { site, whatsappInquiry, categoryBySlug } from '$lib/config';
-	import { formatPrice } from '$lib/utils';
+	import { site, whatsappInquiry } from '$lib/config';
+	import { categoryBySlug } from '$lib/taxonomy.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
@@ -95,9 +95,12 @@
 					<Icon name={icon} size={14} />
 					{part.category.name}
 				</span>
-				<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600"
-					>{part.brand.name}</span
+				<span
+					class="inline-flex items-center gap-1.5 rounded-full bg-abk-blue px-3 py-1 text-xs font-bold text-white"
 				>
+					<Icon name="truck" size={14} />
+					{part.brand.name}
+				</span>
 				{#if part.featured}
 					<span class="rounded-full bg-abk-red px-3 py-1 text-xs font-bold text-white">Featured</span>
 				{/if}
@@ -108,8 +111,15 @@
 			</h1>
 			<p class="mt-2 font-mono text-sm text-slate-500">Part No. {part.part_number}</p>
 
-			<div class="mt-5 flex items-center gap-3">
-				<span class="text-3xl font-black text-abk-navy">{formatPrice(part.price)}</span>
+			<!-- ABK quotes per enquiry rather than showing a price, so this space
+			     carries the two things a buyer actually needs to decide: condition
+			     and availability. -->
+			<div class="mt-5 flex flex-wrap items-center gap-3">
+				<span
+					class="inline-flex items-center rounded-full bg-abk-sky px-3 py-1 text-sm font-bold text-abk-blue"
+				>
+					{part.condition}
+				</span>
 				{#if part.in_stock}
 					<span
 						class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-3 py-1 text-sm font-bold text-emerald-700"
@@ -141,7 +151,7 @@
 				</a>
 			</div>
 			<p class="mt-2 text-center text-xs text-slate-400 sm:text-left">
-				Price excludes shipping. Message us for an export quote to your country.
+				We quote per enquiry, including export shipping — message us for pricing and availability.
 			</p>
 
 			<!-- Specs -->
