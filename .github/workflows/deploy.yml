@@ -58,6 +58,21 @@ jobs:
         with:
           enablement: true
 
+      # GitHub reports the site as http:// until "Enforce HTTPS" is ticked, and
+      # that stays off while the domain is proxied through Cloudflare (GitHub
+      # never sees the DNS it needs to issue its own certificate). The site is
+      # served over HTTPS regardless, and http:// baked into canonical tags,
+      # Open Graph and the sitemap would be wrong — so pin the scheme.
+      - name: Resolve where the site is served from
+        env:
+          ORIGIN: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          {
+            echo "PUBLIC_SITE_URL=https://${ORIGIN#*://}"
+            echo "BASE_PATH=${BASE_PATH}"
+          } >> "$GITHUB_ENV"
+
       - uses: pnpm/action-setup@v4
 
       - uses: actions/setup-node@v4
@@ -70,17 +85,11 @@ jobs:
       - run: pnpm check
 
       - name: Build
-        env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          PUBLIC_SITE_URL: ${{ steps.pages.outputs.origin }}
         run: |
           echo "Building for ${PUBLIC_SITE_URL}${BASE_PATH}/"
           pnpm build
 
       - name: Verify the build
-        env:
-          BASE_PATH: ${{ steps.pages.outputs.base_path }}
-          PUBLIC_SITE_URL: ${{ steps.pages.outputs.origin }}
         run: |
           pages=$(find build/parts -mindepth 2 -name index.html | wc -l)
           echo "Prerendered $pages part pages."
