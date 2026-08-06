@@ -14,14 +14,14 @@ export function normalisePath(path: string): string {
 /**
  * Resolve an internal path for use in an `href`, `action` or `goto`.
  *
- * The site is served from a subdirectory on GitHub Pages
- * (`…github.io/abk/`), so no internal link can be a bare absolute path.
  * Paths are written base-less throughout the app — including the ones passed to
  * `absoluteUrl` for canonical URLs — and pick up the prefix here, along with
  * the trailing slash, so links point at the URL that is actually served rather
  * than one that redirects to it.
  *
- * Moving to a root custom domain later is then just `BASE_PATH=""`.
+ * `base` is empty on abkautopart.com. It was `/abk` on the GitHub Pages project
+ * URL (`…github.io/abk/`), where no internal link could be a bare absolute
+ * path; moving between the two is `BASE_PATH` alone, with no change to callers.
  */
 export function url(path: string): string {
 	return base + normalisePath(path);

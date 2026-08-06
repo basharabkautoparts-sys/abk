@@ -17,9 +17,9 @@ export const site = {
 	/**
 	 * Origin the site is served from, with no trailing slash and no base path —
 	 * `absoluteUrl()` adds the base path. Set `PUBLIC_SITE_URL` at build time;
-	 * the default is the GitHub Pages project site.
+	 * the default is the custom domain the site is published on.
 	 */
-	url: import.meta.env.PUBLIC_SITE_URL || 'https://basharabkautoparts-sys.github.io',
+	url: import.meta.env.PUBLIC_SITE_URL || 'https://abkautopart.com',
 
 	// --- Contact (from the brand artwork) ---
 	phoneDisplay: '065-581-2720',

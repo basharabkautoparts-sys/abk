@@ -10,11 +10,12 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
  * exist at build time (a part added in the admin since the last deploy): GitHub
  * Pages serves 404.html, the app boots and resolves the route client-side.
  *
- * The site is served from a repo subpath on GitHub Pages
- * (basharabkautoparts-sys.github.io/abk), so every internal link needs that
- * prefix — see `url()` in src/lib/paths.ts. Moving to a root custom domain
- * later means setting BASE_PATH="" and PUBLIC_SITE_URL, and adding static/CNAME;
- * nothing in the components changes.
+ * The site is served from the root of abkautopart.com, so `base` is empty. It
+ * carried the `/abk` repo subpath while it lived on the GitHub Pages project
+ * URL (basharabkautoparts-sys.github.io/abk), and `url()` in src/lib/paths.ts
+ * still prefixes every internal link — so either layout works without touching
+ * a component. CI takes BASE_PATH from actions/configure-pages, which follows
+ * whatever the Pages settings say; the default here is only for local builds.
  */
 const config = {
 	preprocess: vitePreprocess(),
@@ -27,7 +28,7 @@ const config = {
 			strict: false
 		}),
 		paths: {
-			base: process.env.BASE_PATH ?? '/abk',
+			base: process.env.BASE_PATH ?? '',
 			// Keep `base` an absolute path. Left relative (the default), it
 			// resolves to `..`/`../..` per page during prerendering, which is fine
 			// for links but corrupts the absolute URLs built for canonical tags,
