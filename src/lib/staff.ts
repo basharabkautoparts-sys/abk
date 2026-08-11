@@ -132,6 +132,38 @@ export async function setStaffRole(email: string, role: StaffRole): Promise<void
 	if (error) throw new Error(error.message);
 }
 
+/**
+ * Create the login, or reset its password — one idempotent call. Runs through
+ * the `admin_set_staff_password` database function (SECURITY DEFINER), which
+ * re-checks that the caller is root and that the target is on the allowlist,
+ * so like everything else here it fails closed. No service-role key is
+ * involved: the function authorises the caller by their own session, which is
+ * why a static site can do this safely.
+ */
+export async function setPassword(email: string, password: string): Promise<{ created: boolean }> {
+	const db = supabase();
+	const clean = normalise(email);
+
+	if (!db) {
+		if (!demoStore().some((s) => s.email === clean)) {
+			throw new Error('Add that email to the staff list first.');
+		}
+		// Demo mode has no real logins; report "created" so the UI flow reads true.
+		return { created: true };
+	}
+
+	const { data, error } = await db.rpc('admin_set_staff_password', {
+		target_email: clean,
+		new_password: password
+	});
+	// PostgREST surfaces the function's RAISE message as error.message.
+	if (error) throw new Error(error.message);
+	// A jsonb-returning function comes back as the bare object; tolerate an
+	// array wrapper too, in case the row shape ever changes.
+	const row = (Array.isArray(data) ? data[0] : data) as { created?: boolean } | null;
+	return { created: Boolean(row?.created) };
+}
+
 export async function removeStaff(email: string): Promise<void> {
 	const db = supabase();
 	const clean = normalise(email);

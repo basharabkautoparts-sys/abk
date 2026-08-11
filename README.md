@@ -42,6 +42,7 @@ you are; the **`staff` table** says what you may do:
 | Upload part images | — | — | ✅ | ✅ |
 | See the staff list | — | — | ✅ | ✅ |
 | Add / remove / change roles | — | — | — | ✅ |
+| Create logins / set passwords | — | — | — | ✅ |
 
 A signed-in account that is not on the list gets exactly what an anonymous
 visitor gets. That is enforced in Postgres, not in the UI — the admin pages just
@@ -123,17 +124,24 @@ API, so it has to be done from the dashboard:
 
 #### Adding more people later
 
-Two steps, in either order — access begins once both exist:
+One step, from `/admin/staff` (root only): enter the email, a password and a
+role, and **Add** — the person is authorised *and* their login is created, so
+they can sign in immediately. The key button on each row sets a new password
+for anyone who has forgotten theirs (and creates the login, for anyone
+authorised earlier without one). Removing someone still revokes access
+immediately, even mid-session.
 
-1. **Authorise the email** — `/admin/staff` in the app (root only). This is what
-   grants permission, and removing someone here revokes access immediately, even
-   mid-session.
-2. **Create their login** — _Authentication → Users → Add user_ in Supabase.
-   With sign-ups disabled, they cannot create it themselves.
+Creating logins and setting passwords normally needs the admin API, which a
+static site cannot hold. Instead that power lives in one database function,
+`public.admin_set_staff_password` (defined in `supabase/schema.sql`, `SECURITY
+DEFINER`). It only acts when the caller's own session belongs to a `root`
+account on the staff list, and only on emails that are themselves on the list —
+the same two checks, enforced in Postgres, with **no service-role key anywhere**.
+It is created when you apply `schema.sql`, so there is no separate deploy step;
+the browser calls it as `supabase.rpc('admin_set_staff_password', …)`.
 
-Making that one step would mean an endpoint holding the service-role key, which
-can create any user in the project. That's a deliberate omission, not an
-oversight — say the word if you want it.
+The dashboard route (_Authentication → Users → Add user_) still works exactly
+as before, as does adding the allowlist entry and the login in either order.
 
 ### 3. Repository variables
 
@@ -320,7 +328,8 @@ src/
     supabase.ts          Isomorphic client (build time + browser); demo-mode flag
     db.ts                Catalogue queries, mutations, client-side filtering
     auth.svelte.ts       Browser-side staff session + role (Supabase Auth or demo)
-    staff.ts             Staff allowlist: list / add / remove / change role
+    staff.ts             Staff allowlist: list / add / remove / change role /
+                         create login + set password (via admin_set_staff_password)
     demo.ts              Demo-mode credentials
     resource.svelte.ts   Fetch-after-mount helper for the admin
     partForm.ts          Form parsing, validation + image upload
@@ -340,7 +349,8 @@ src/
     admin/               Login, dashboard, parts CRUD, brands, categories,
                          staff — browser-only
 supabase/
-  schema.sql             Tables (parts, taxonomy, staff), RLS, storage bucket
+  schema.sql             Tables (parts, taxonomy, staff), RLS, storage bucket,
+                         admin_set_staff_password (create login / set password)
   seed.sql               Sample catalogue
 static/
   .nojekyll              Stops Pages hiding the _app/ directory

@@ -3,35 +3,83 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { url } from '$lib/paths';
 	import { admin, isRoot } from '$lib/auth.svelte';
-	import { addStaff, listStaff, removeStaff, setStaffRole } from '$lib/staff';
+	import { addStaff, listStaff, removeStaff, setPassword, setStaffRole } from '$lib/staff';
 	import { resource } from '$lib/resource.svelte';
 	import type { StaffMember, StaffRole } from '$lib/types';
 
 	const staff = resource<StaffMember[]>([], listStaff);
 
 	let email = $state('');
+	let password = $state('');
 	let role = $state<StaffRole>('admin');
 	let note = $state('');
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let notice = $state<string | null>(null);
 
+	// Which member's inline "set password" editor is open, if any.
+	let pwTarget = $state<string | null>(null);
+	let pwValue = $state('');
+	let pwSaving = $state(false);
+
 	async function add(event: SubmitEvent) {
 		event.preventDefault();
 		saving = true;
 		error = null;
 		notice = null;
+		const clean = email.trim().toLowerCase();
 		try {
-			await addStaff(email, role, note, admin.email ?? '');
-			notice = `${email.trim().toLowerCase()} can now sign in once their Supabase account exists.`;
-			email = '';
-			note = '';
-			role = 'admin';
-			await staff.refresh();
+			await addStaff(clean, role, note, admin.email ?? '');
+		} catch (e) {
+			error = e instanceof Error ? e.message : String(e);
+			saving = false;
+			return;
+		}
+		if (password) {
+			try {
+				await setPassword(clean, password);
+				notice = `${clean} was added and can sign in now.`;
+			} catch (e) {
+				// The allowlist entry stuck; only the login failed. Point at the
+				// retry path instead of leaving a half-done state unexplained.
+				const reason = e instanceof Error ? e.message : String(e);
+				error = `${clean} is on the list, but creating their login failed: ${reason} Use the key button on their row to retry.`;
+			}
+		} else {
+			notice = `${clean} can now sign in once their Supabase account exists.`;
+		}
+		email = '';
+		password = '';
+		note = '';
+		role = 'admin';
+		await staff.refresh();
+		saving = false;
+	}
+
+	function openPassword(member: StaffMember) {
+		pwTarget = pwTarget === member.email ? null : member.email;
+		pwValue = '';
+		error = null;
+		notice = null;
+	}
+
+	async function savePassword(event: SubmitEvent) {
+		event.preventDefault();
+		if (!pwTarget) return;
+		pwSaving = true;
+		error = null;
+		notice = null;
+		try {
+			const { created } = await setPassword(pwTarget, pwValue);
+			notice = created
+				? `Login created — ${pwTarget} can sign in now.`
+				: `Password updated for ${pwTarget}.`;
+			pwTarget = null;
+			pwValue = '';
 		} catch (e) {
 			error = e instanceof Error ? e.message : String(e);
 		} finally {
-			saving = false;
+			pwSaving = false;
 		}
 	}
 
@@ -95,7 +143,7 @@
 	<!-- Add -->
 	<form class="mt-6 rounded-2xl border border-slate-200 bg-white p-6" onsubmit={add}>
 		<h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Add someone</h2>
-		<div class="mt-4 grid gap-4 sm:grid-cols-[1fr_10rem_1fr_auto] sm:items-end">
+		<div class="mt-4 grid gap-4 sm:grid-cols-2 sm:items-end lg:grid-cols-[1fr_1fr_9rem_1fr_auto]">
 			<div>
 				<label for="staff-email" class="mb-1 block text-sm font-semibold text-slate-700">Email *</label>
 				<input
@@ -104,6 +152,20 @@
 					required
 					bind:value={email}
 					placeholder="name@example.com"
+					class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
+				/>
+			</div>
+			<div>
+				<label for="staff-password" class="mb-1 block text-sm font-semibold text-slate-700"
+					>Password <span class="font-normal text-slate-400">(optional)</span></label
+				>
+				<input
+					id="staff-password"
+					type="password"
+					minlength="8"
+					autocomplete="new-password"
+					bind:value={password}
+					placeholder="min. 8 characters"
 					class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none focus:border-abk-blue"
 				/>
 			</div>
@@ -142,10 +204,10 @@
 		<p class="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
 			<Icon name="alert" size={14} />
 			<span>
-				<strong>This authorises an email — it does not create the login.</strong>
-				Sign-ups are disabled, so also add the person under
-				<em>Authentication → Users → Add user</em> in Supabase. Either order works: access
-				begins once both exist.
+				<strong>With a password, this creates the login too</strong> — the person can sign in
+				straight away. Leave it blank to only authorise the email; the login must then be
+				created later with the <Icon name="key" size={12} /> button on their row (or under
+				<em>Authentication → Users</em> in Supabase).
 			</span>
 		</p>
 	</form>
@@ -192,6 +254,15 @@
 							<td class="px-4 py-3 text-right">
 								<button
 									type="button"
+									title="Set password"
+									onclick={() => openPassword(member)}
+									class="rounded-md p-2 text-slate-400 hover:bg-abk-sky hover:text-abk-blue"
+									class:text-abk-blue={pwTarget === member.email}
+								>
+									<Icon name="key" size={16} />
+								</button>
+								<button
+									type="button"
 									title="Remove"
 									onclick={() => remove(member)}
 									class="rounded-md p-2 text-slate-400 hover:bg-red-50 hover:text-abk-red"
@@ -200,6 +271,44 @@
 								</button>
 							</td>
 						</tr>
+						{#if pwTarget === member.email}
+							<tr class="bg-slate-50">
+								<td colspan="4" class="px-4 py-3">
+									<form class="flex flex-wrap items-center gap-3" onsubmit={savePassword}>
+										<label for="staff-set-password" class="text-xs font-semibold text-slate-600">
+											New password for {member.email}
+										</label>
+										<input
+											id="staff-set-password"
+											type="password"
+											required
+											minlength="8"
+											autocomplete="new-password"
+											bind:value={pwValue}
+											placeholder="min. 8 characters"
+											class="w-56 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-abk-blue"
+										/>
+										<button
+											type="submit"
+											disabled={pwSaving}
+											class="rounded-lg bg-abk-blue px-4 py-2 text-xs font-bold text-white transition hover:bg-abk-navy disabled:opacity-60"
+										>
+											{pwSaving ? 'Saving…' : 'Save'}
+										</button>
+										<button
+											type="button"
+											onclick={() => (pwTarget = null)}
+											class="text-xs font-semibold text-slate-500 hover:text-slate-700"
+										>
+											Cancel
+										</button>
+										<span class="text-xs text-slate-400">
+											Creates the login if it doesn't exist yet; resets the password if it does.
+										</span>
+									</form>
+								</td>
+							</tr>
+						{/if}
 					{/each}
 				</tbody>
 			</table>
@@ -208,9 +317,10 @@
 
 	<p class="mt-4 text-xs text-slate-400">
 		The database refuses to remove or demote the last root account, so the allowlist cannot be
-		locked shut by accident. Removing someone here revokes their access immediately, even while
-		they are signed in — but it does not delete their Supabase login. Delete that too if they are
-		leaving for good.
+		locked shut by accident. The key button sets someone's password — creating their login if it
+		doesn't exist yet — which is also how to help anyone who has forgotten theirs. Removing
+		someone here revokes their access immediately, even while they are signed in — but it does
+		not delete their Supabase login. Delete that too if they are leaving for good.
 	</p>
 
 	<p class="mt-6 text-sm">

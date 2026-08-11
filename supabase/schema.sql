@@ -268,6 +268,79 @@ values ('owner@example.com', 'root', 'Owner', 'initial setup')
 on conflict (email) do update set role = 'root';
 
 -- ---------------------------------------------------------------------------
+-- Staff login management: create a login, or reset its password — one call.
+--
+-- This is the single privileged action the static site cannot do itself, and
+-- the reason is worth stating: creating an auth account or setting a password
+-- normally needs the service-role key, which must never reach the browser. So
+-- it lives here as a SECURITY DEFINER function — the two checks the Edge
+-- Function used to make (caller is `root`, target is on the staff list) run in
+-- the database with RLS bypassed, and no service-role key exists anywhere.
+--
+-- The caller is identified by their own session (auth.jwt() -> private.is_root),
+-- so the anon key cannot fake it. The password is stored as bcrypt
+-- (pgcrypto `crypt` + `gen_salt('bf')`), which the auth plane verifies;
+-- resetting revokes the target's existing refresh tokens, matching
+-- PUT /auth/v1/user. Idempotent: it creates the login if absent, else resets.
+--
+-- Called from the browser as `supabase.rpc('admin_set_staff_password', ...)`.
+-- ---------------------------------------------------------------------------
+create or replace function public.admin_set_staff_password(
+	target_email text,
+	new_password text
+) returns jsonb
+language plpgsql
+security definer set search_path = ''
+as $fn$
+declare
+	clean_email text := lower(trim(coalesce(target_email, '')));
+	existing_id  uuid;
+begin
+	-- Authorization first: only a root account, and only for a known staff
+	-- member. 42501 (insufficient_privilege) surfaces as 401; a check
+	-- violation surfaces as a 400 with the message — both fail closed.
+	if not private.is_root() then
+		raise exception 'Only a root account can manage logins.'
+			using errcode = '42501';
+	end if;
+	if clean_email = '' or position('@' in clean_email) = 0 then
+		raise exception 'A valid email is required.' using errcode = '23514';
+	end if;
+	if length(new_password) < 8 then
+		raise exception 'Password must be at least 8 characters.'
+			using errcode = '23514';
+	end if;
+	if not exists (select 1 from public.staff s where s.email = clean_email) then
+		raise exception 'Add that email to the staff list first.'
+			using errcode = '23514';
+	end if;
+
+	select u.id into existing_id
+	  from auth.users u
+	 where lower(u.email) = clean_email;
+
+	if existing_id is not null then
+		update auth.users
+		   set encrypted_password = public.crypt(new_password, public.gen_salt('bf')),
+		       updated_at = now()
+		 where id = existing_id;
+		update auth.refresh_tokens set revoked = true where user_id = existing_id;
+		return jsonb_build_object('created', false);
+	end if;
+
+	-- No sign-up flow to confirm through: a root vouched for this address by
+	-- putting it on the allowlist, so the email is confirmed on creation.
+	insert into auth.users (email, encrypted_password, email_confirmed_at, raw_user_meta_data)
+	values (clean_email, public.crypt(new_password, public.gen_salt('bf')), now(), '{}'::jsonb);
+	return jsonb_build_object('created', true);
+end;
+$fn$;
+
+-- Signed-in callers only; the function itself enforces root. anon never.
+revoke all on function public.admin_set_staff_password(text, text) from public, anon;
+grant execute on function public.admin_set_staff_password(text, text) to authenticated;
+
+-- ---------------------------------------------------------------------------
 -- Row Level Security on the taxonomy
 --   * Anyone may read it — every visitor needs the names to read the catalogue.
 --   * Staff may change it.
