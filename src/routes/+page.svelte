@@ -8,10 +8,14 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import Logo from '$lib/components/Logo.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
-	import BrandMark, { isWordmark } from '$lib/components/BrandMark.svelte';
+	import BrandMark, { needsNameLabel } from '$lib/components/BrandMark.svelte';
+	import PartsMarquee from '$lib/components/PartsMarquee.svelte';
 	import { organizationJsonLd, websiteJsonLd } from '$lib/seo';
 
 	let { data }: { data: PageData } = $props();
+
+	/** The owner's own photographs of stock, for the sliding strip. */
+	const GALLERY = Array.from({ length: 8 }, (_, i) => `/gallery/parts-${i + 1}.jpg`);
 </script>
 
 <Seo canonical="/" jsonLd={[organizationJsonLd(), websiteJsonLd()]} description={site.metaDescription} />
@@ -61,8 +65,8 @@
 							href={url(`/parts?brand=${brand.slug}`)}
 							class="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
 						>
-							<BrandMark slug={brand.slug} name={brand.name} size={40} />
-							{#if !isWordmark(brand.slug)}
+							<BrandMark slug={brand.slug} name={brand.name} size={44} />
+							{#if needsNameLabel(brand.slug)}
 								<span class="text-sm font-bold tracking-tight">{brand.name}</span>
 							{/if}
 						</a>
@@ -129,6 +133,9 @@
 	</div>
 </section>
 
+<!-- ============================ GALLERY ============================ -->
+<PartsMarquee images={GALLERY} label={t('home.gallery.label')} />
+
 <!-- ============================ BRANDS ============================ -->
 <section class="bg-slate-50 py-14">
 	<div class="container-page text-center">
@@ -145,8 +152,8 @@
 					href={url(`/parts?brand=${brand.slug}`)}
 					class="flex h-32 flex-col items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 text-slate-700 shadow-sm transition hover:border-abk-blue hover:text-abk-blue"
 				>
-					<BrandMark slug={brand.slug} name={brand.name} size={46} />
-					{#if !isWordmark(brand.slug)}
+					<BrandMark slug={brand.slug} name={brand.name} size={48} />
+					{#if needsNameLabel(brand.slug)}
 						<span class="text-base font-black tracking-tight">{brand.name}</span>
 					{/if}
 				</a>
@@ -154,35 +161,6 @@
 		</div>
 	</div>
 </section>
-
-<!-- ============================ FEATURED ============================ -->
-{#if data.featured.length}
-	<section class="container-page py-16">
-		<div class="mb-8 flex items-end justify-between">
-			<div>
-				<div class="rule-brand mb-3"></div>
-				<p class="text-sm font-bold uppercase tracking-wider text-abk-red">
-					{t('home.featured.eyebrow')}
-				</p>
-				<h2 class="mt-2 text-3xl font-black tracking-tight text-slate-800">
-					{t('home.featured.heading')}
-				</h2>
-			</div>
-			<a
-				href={url('/parts')}
-				class="hidden items-center gap-1 text-sm font-bold text-abk-blue hover:underline sm:flex"
-			>
-				{t('action.viewAll')}
-				<Icon name="arrow" size={16} class="rtl:-scale-x-100" />
-			</a>
-		</div>
-		<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-			{#each data.featured as part, i (part.id)}
-				<PartCard {part} eager={i < 4} />
-			{/each}
-		</div>
-	</section>
-{/if}
 
 <!-- ============================ WHY ABK ============================ -->
 <section class="border-y border-slate-100 bg-white">
@@ -217,11 +195,11 @@
 		</div>
 		<div class="overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)]">
 			<img
-				src={asset('/hero-parts.jpg')}
-				alt="Genuine Japanese auto parts — coil springs, brake discs, clutch kits, filters and drive shafts"
-				class="w-full"
-				width="845"
-				height="809"
+				src={asset('/abk-export.jpg')}
+				alt="Export containers loading at the A.B.K. Auto Parts warehouse in Thailand"
+				class="aspect-[4/3] w-full object-cover"
+				width="1200"
+				height="900"
 				loading="lazy"
 			/>
 		</div>

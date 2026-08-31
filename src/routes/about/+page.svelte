@@ -5,7 +5,7 @@
 	import { t, type TranslationKey } from '$lib/i18n.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import BrandMark, { isWordmark } from '$lib/components/BrandMark.svelte';
+	import BrandMark, { needsNameLabel } from '$lib/components/BrandMark.svelte';
 	import { breadcrumbJsonLd } from '$lib/seo';
 </script>
 
@@ -104,8 +104,8 @@
 			<div
 				class="flex h-32 flex-col items-center justify-center gap-2.5 rounded-xl border border-slate-200 bg-white px-4 text-slate-700 shadow-sm"
 			>
-				<BrandMark slug={brand.slug} name={brand.name} size={46} />
-				{#if !isWordmark(brand.slug)}
+				<BrandMark slug={brand.slug} name={brand.name} size={48} />
+				{#if needsNameLabel(brand.slug)}
 					<span class="text-base font-black tracking-tight">{brand.name}</span>
 				{/if}
 			</div>

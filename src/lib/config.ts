@@ -39,6 +39,18 @@ export const site = {
 
 	email: 'bashar.abkautoparts@gmail.com',
 
+	/**
+	 * What the Contact page's map is centred on. Google's embed takes a plain
+	 * search string, so this can be a full street address, a Plus Code, or
+	 * "lat,lng" — whichever puts the pin on the shop.
+	 * This is the address on the company's own Google Business listing, so the
+	 * pin lands on the shop rather than on the middle of Bangkok. The map is
+	 * best-effort — a visitor blocking third-party frames sees nothing — so the
+	 * "Open in Google Maps" link beside it is the one that always works.
+	 */
+	mapQuery:
+		'A.B.K. AUTO PARTS CO., LTD., Thap Chang, Saphan Sung, Bangkok 10250, Thailand',
+
 	// --- TODO: confirm before launch (not on the artwork) ---
 	address: {
 		line1: '',

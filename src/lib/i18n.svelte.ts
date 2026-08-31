@@ -89,8 +89,7 @@ const en = {
 	'home.category.heading': 'Find the right part',
 	'home.category.lead': 'From engine internals to body panels — browse our catalogue by system.',
 
-	'home.featured.eyebrow': 'Featured',
-	'home.featured.heading': 'Popular parts',
+	'home.gallery.label': 'Genuine parts in stock at A.B.K. Auto Parts',
 	'home.latest.eyebrow': 'New arrivals',
 	'home.latest.heading': 'Recently added',
 
@@ -174,6 +173,8 @@ const en = {
 	'contact.method.emailHint': 'For quotes and export enquiries',
 	'contact.hours': 'Business hours',
 	'contact.location': 'Location',
+	'contact.map.heading': 'Find us',
+	'contact.map.directions': 'Open in Google Maps',
 	'contact.ready.heading': 'Ready to order?',
 	'contact.ready.lead': 'Chat with our team now on WhatsApp for the quickest response.',
 	'contact.ready.cta': 'Message on WhatsApp',
@@ -237,8 +238,7 @@ const ar: Partial<Record<TranslationKey, string>> = {
 	'home.category.heading': 'اعثر على القطعة المناسبة',
 	'home.category.lead': 'من أجزاء المحرك إلى ألواح الهيكل — تصفح الكتالوج حسب النظام.',
 
-	'home.featured.eyebrow': 'مميّز',
-	'home.featured.heading': 'القطع الأكثر طلباً',
+	'home.gallery.label': 'قطع غيار أصلية متوفرة لدى A.B.K. Auto Parts',
 	'home.latest.eyebrow': 'وصل حديثاً',
 	'home.latest.heading': 'أضيفت مؤخراً',
 
@@ -314,6 +314,8 @@ const ar: Partial<Record<TranslationKey, string>> = {
 	'contact.method.emailHint': 'لعروض الأسعار واستفسارات التصدير',
 	'contact.hours': 'ساعات العمل',
 	'contact.location': 'الموقع',
+	'contact.map.heading': 'موقعنا',
+	'contact.map.directions': 'افتح في خرائط جوجل',
 	'contact.ready.heading': 'جاهز للطلب؟',
 	'contact.ready.lead': 'تحدث مع فريقنا الآن عبر واتساب للحصول على أسرع رد.',
 	'contact.ready.cta': 'راسلنا على واتساب',

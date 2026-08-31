@@ -6,6 +6,18 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { breadcrumbJsonLd } from '$lib/seo';
 
+	/**
+	 * Google's `output=embed` map takes a plain search string and needs no API
+	 * key, which suits a static site with no server to hide one on. Lazy so it
+	 * costs nothing — and contacts Google for nothing — until it scrolls up.
+	 */
+	const mapSrc = $derived(
+		`https://www.google.com/maps?q=${encodeURIComponent(site.mapQuery)}&z=16&output=embed`
+	);
+	const mapLink = $derived(
+		`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(site.mapQuery)}`
+	);
+
 	const methods = $derived([
 		{
 			icon: 'whatsapp',
@@ -71,6 +83,33 @@
 				<p class="mt-1 text-sm text-slate-500">{m.hint}</p>
 			</a>
 		{/each}
+	</div>
+
+	<!-- Map -->
+	<div class="mt-10 overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)]">
+		<div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-6 py-4">
+			<h2 class="flex items-center gap-2 text-lg font-bold text-slate-800">
+				<Icon name="pin" size={20} class="text-abk-blue" />
+				{t('contact.map.heading')}
+			</h2>
+			<a
+				href={mapLink}
+				target="_blank"
+				rel="noopener"
+				class="inline-flex items-center gap-1.5 text-sm font-bold text-abk-blue hover:underline"
+			>
+				{t('contact.map.directions')}
+				<Icon name="arrow" size={16} class="rtl:-scale-x-100" />
+			</a>
+		</div>
+		<iframe
+			src={mapSrc}
+			title={`${site.name} — ${t('contact.map.heading')}`}
+			class="block h-[380px] w-full border-0"
+			loading="lazy"
+			referrerpolicy="no-referrer-when-downgrade"
+			allowfullscreen
+		></iframe>
 	</div>
 
 	<div class="mt-10 grid gap-6 lg:grid-cols-2">

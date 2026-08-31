@@ -6,8 +6,9 @@ export const load: PageLoad = async () => {
 	// counts have to be computed over the whole catalogue anyway.
 	const all = await listParts({ sort: 'newest' });
 
+	// No `featured` list: the owner asked for the "Popular parts" grid to go, and
+	// a load function that keeps computing one is how it quietly comes back.
 	return {
-		featured: all.filter((p) => p.featured).slice(0, 8),
 		latest: all.slice(0, 8),
 		counts: countByCategory(all)
 	};

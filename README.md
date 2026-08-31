@@ -341,6 +341,32 @@ email are set.
 
 ---
 
+## Photographs, brand logos and the map
+
+**The home page marquee** (`static/gallery/parts-1…8.jpg`) is the owner's own
+photographs of stock. It scrolls continuously, pauses on hover, and stops
+entirely for anyone who has asked for reduced motion. The track holds the list
+twice and travels exactly -50%, so the loop has no seam. To change the pictures,
+replace the files and adjust the `GALLERY` list in `src/routes/+page.svelte`.
+
+> The images are deliberately **not** `loading="lazy"`. The strip never stops
+> moving, so a frame that has not loaded yet slides into view as a hole. They
+> are ~750KB in total, below the fold, and marked `fetchpriority="low"`.
+
+**Vehicle-brand logos** live in `static/brands/`, mapped from a brand slug in
+`BrandMark.svelte`. All four are public domain on Wikimedia Commons and remain
+their owners' trademarks — see `static/brands/SOURCES.md` for provenance and for
+how to add another. A brand added in `/admin/brands` with no logo file renders
+its name as a wordmark, so nothing breaks and the row stays even.
+
+**The Contact map** is Google's keyless `output=embed` iframe, centred on
+`site.mapQuery`. There is no API key to hide, which suits a static host. Treat
+it as best-effort: a visitor who blocks third-party frames sees an empty panel,
+which is why the **"Open in Google Maps"** link sits beside it and is the one
+that always works.
+
+---
+
 ## Editing the brand / contact details
 
 Company name, tagline, phone, WhatsApp, email, address and navigation live in
@@ -390,8 +416,8 @@ src/
     data/seed.ts         Bundled sample catalogue (demo mode)
     components/          Header, Footer, PartCard, PartForm, Icon, Seo,
                          Logo (mark + company lockup), BrandMark (vehicle-brand
-                         marks, drawn as SVG), SearchBox (live suggestions),
-                         LanguageSwitch, …
+                         logos), PartsMarquee (the sliding stock gallery),
+                         SearchBox (live suggestions), LanguageSwitch, …
   routes/
     +layout.ts           prerender = true, trailingSlash = 'always'
     +page.svelte         Home
@@ -405,6 +431,9 @@ supabase/
                          admin_set_staff_password (create login / set password)
   seed.sql               Sample catalogue
 static/
+  brands/                Vehicle-brand logos + SOURCES.md (provenance, licence)
+  gallery/               The owner's photographs of stock, for the home marquee
+  abk-export.jpg         Containers loading at the warehouse ("Why buy from ABK")
   .nojekyll              Stops Pages hiding the _app/ directory
 .github/workflows/
   deploy.yml             Build + publish to Pages (push, nightly, on demand)
