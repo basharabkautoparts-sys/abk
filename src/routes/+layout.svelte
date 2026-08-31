@@ -10,6 +10,7 @@
 	import { isSupabaseConfigured } from '$lib/supabase';
 	import { routePath } from '$lib/query';
 	import { initAdminSession } from '$lib/auth.svelte';
+	import { initLang, t } from '$lib/i18n.svelte';
 
 	let { children, data } = $props();
 
@@ -26,6 +27,10 @@
 		// Resolve any existing staff session so the header can offer the admin
 		// link. Anonymous visitors resolve to null without a network call.
 		initAdminSession();
+
+		// The prerendered HTML is English. Re-apply the visitor's saved language
+		// (and reading direction) now that localStorage is reachable.
+		initLang();
 	});
 </script>
 
@@ -45,8 +50,8 @@
 		href={`https://wa.me/${site.whatsappNumber}`}
 		target="_blank"
 		rel="noopener"
-		aria-label="Chat on WhatsApp"
-		class="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
+		aria-label={t('action.chatWhatsapp')}
+		class="fixed bottom-5 end-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition hover:scale-105 hover:shadow-xl"
 	>
 		<Icon name="whatsapp" size={30} />
 	</a>
@@ -54,7 +59,7 @@
 
 {#if data.demoMode}
 	<div
-		class="fixed bottom-5 left-5 z-40 flex items-center gap-2 rounded-full bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-amber-950 shadow-md"
+		class="fixed bottom-5 start-5 z-40 flex items-center gap-2 rounded-full bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-amber-950 shadow-md"
 		title="Supabase is not configured — the site is serving bundled sample data."
 	>
 		<Icon name="alert" size={14} /> Demo mode

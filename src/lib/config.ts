@@ -11,8 +11,18 @@ export const site = {
 	legalName: 'A.B.K. Auto Parts Co., Ltd',
 	tagline: 'Genuine Japanese Parts',
 	slogan: 'Quality you can trust, service you can rely on.',
+
+	/**
+	 * The company's own words, supplied by the owner — used verbatim as the
+	 * hero paragraph, the footer blurb and the organisation description. Edit
+	 * here and it changes everywhere; do not paraphrase it in a component.
+	 */
 	description:
-		'A.B.K. Auto Parts Co., Ltd supplies 100% genuine Japanese auto parts for Toyota, Isuzu, Mitsubishi and Nissan, with fast and reliable global export from Thailand.',
+		'A.B.K. Auto Parts Co., Ltd. supplies genuine parts for Toyota, Isuzu, Mitsubishi, Nissan, and other leading automotive brands. With over 25 years of export experience, we deliver quality you can trust and service you can rely on.',
+
+	/** Shorter form, for meta descriptions where the full sentence runs long. */
+	metaDescription:
+		'A.B.K. Auto Parts Co., Ltd. — genuine parts for Toyota, Isuzu, Mitsubishi and Nissan, with over 25 years of export experience from Thailand.',
 
 	/**
 	 * Origin the site is served from, with no trailing slash and no base path —
@@ -27,8 +37,9 @@ export const site = {
 	whatsappNumber: '66655812720', // digits only, for wa.me links
 	whatsappDisplay: '+66 65-581-2720',
 
-	// --- TODO: confirm these before launch (not on the artwork) ---
-	email: 'info@abkautoparts.com',
+	email: 'bashar.abkautoparts@gmail.com',
+
+	// --- TODO: confirm before launch (not on the artwork) ---
 	address: {
 		line1: '',
 		city: 'Bangkok',
@@ -45,31 +56,42 @@ export const site = {
 	hours: 'Mon–Sat, 8:00–18:00 (ICT)'
 } as const;
 
-/** Selling points shown on the hero / feature strip (from the artwork). */
+/**
+ * Selling points shown on the feature strip (from the artwork). `key` names the
+ * pair of translation keys in src/lib/i18n.svelte.ts (`<key>.title` /
+ * `<key>.text`); `title`/`text` are the English fallback.
+ */
 export const features = [
 	{
 		icon: 'shield',
+		key: 'feature.genuine',
 		title: '100% Genuine',
 		text: 'Authentic Japanese parts, sourced and verified — no imitations.'
 	},
 	{
 		icon: 'globe',
+		key: 'feature.export',
 		title: 'Global Export',
-		text: 'Fast, reliable worldwide shipping direct from Thailand.'
+		text: 'Reliable worldwide shipping direct from Thailand.'
 	},
 	{
 		icon: 'medal',
+		key: 'feature.quality',
 		title: 'Premium Quality',
 		text: 'Trusted service and quality you can rely on, order after order.'
 	}
 ] as const;
 
-/** Primary top navigation. */
+/**
+ * Primary top navigation. `key` is the translation key in src/lib/i18n.svelte.ts;
+ * `label` is the English fallback for anywhere that renders before the
+ * dictionary is reachable.
+ */
 export const nav = [
-	{ label: 'Home', href: '/' },
-	{ label: 'All Parts', href: '/parts' },
-	{ label: 'About', href: '/about' },
-	{ label: 'Contact', href: '/contact' }
+	{ key: 'nav.home', label: 'Home', href: '/' },
+	{ key: 'nav.parts', label: 'All Parts', href: '/parts' },
+	{ key: 'nav.about', label: 'About', href: '/about' },
+	{ key: 'nav.contact', label: 'Contact', href: '/contact' }
 ] as const;
 
 /**

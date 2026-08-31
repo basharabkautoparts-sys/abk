@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
 	import { taxonomy, categoryBySlug, brandBySlug } from '$lib/taxonomy.svelte';
+	import { t } from '$lib/i18n.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
@@ -66,12 +67,12 @@
 
 	const heading = $derived(
 		filters.q
-			? `Search: “${filters.q}”`
+			? `${t('parts.searchPrefix')}: “${filters.q}”`
 			: activeCategory
 				? activeCategory.name
 				: activeBrand
-					? `${activeBrand.name} Parts`
-					: 'All Parts'
+					? `${activeBrand.name} ${t('parts.brandParts')}`
+					: t('parts.all')
 	);
 
 	const seoDescription = $derived(
@@ -138,29 +139,31 @@
 />
 
 <!-- Page header -->
-<section class="brand-gradient text-white">
+<section class="border-b border-slate-200 bg-white">
 	<div class="container-page py-10">
-		<nav class="mb-3 flex items-center gap-1.5 text-sm text-white/70" aria-label="Breadcrumb">
-			<a href={url('/')} class="hover:text-white">Home</a>
-			<Icon name="chevron" size={14} />
-			<a href={url('/parts')} class="hover:text-white">Parts</a>
+		<nav class="mb-3 flex items-center gap-1.5 text-sm text-slate-500" aria-label="Breadcrumb">
+			<a href={url('/')} class="hover:text-abk-blue">{t('nav.home')}</a>
+			<Icon name="chevron" size={14} class="rtl:-scale-x-100" />
+			<a href={url('/parts')} class="hover:text-abk-blue">{t('nav.parts')}</a>
 			{#if activeCategory}
-				<Icon name="chevron" size={14} />
-				<span class="text-white">{activeCategory.name}</span>
+				<Icon name="chevron" size={14} class="rtl:-scale-x-100" />
+				<span class="text-slate-800">{activeCategory.name}</span>
 			{/if}
 			{#if activeBrand}
-				<Icon name="chevron" size={14} />
-				<span class="text-white">{activeBrand.name}</span>
+				<Icon name="chevron" size={14} class="rtl:-scale-x-100" />
+				<span class="text-slate-800">{activeBrand.name}</span>
 			{/if}
 		</nav>
-		<h1 class="text-3xl font-black tracking-tight sm:text-4xl">{heading}</h1>
-		<p class="mt-2 text-white/80">
-			{parts.length} part{parts.length === 1 ? '' : 's'} available
+		<h1 class="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">{heading}</h1>
+		<p class="mt-2 text-slate-500">
+			{parts.length}
+			{parts.length === 1 ? t('parts.item') : t('parts.items')}
+			{t('parts.available')}
 			<!-- The heading above collapses to the category name when both a category
 			     and a brand are active, so the brand filter needs its own callout here
 			     — otherwise it is only visible as a removable chip further down. -->
 			{#if activeBrand}
-				for <span class="font-bold text-white">{activeBrand.name}</span>
+				{t('parts.for')} <span class="font-bold text-slate-700">{activeBrand.name}</span>
 			{/if}
 		</p>
 	</div>
@@ -177,9 +180,11 @@
 
 			<div>
 				<div class="rule-brand mb-2"></div>
-				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Search</h2>
+				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+					{t('parts.search')}
+				</h2>
 				<div class="relative">
-					<span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-slate-400">
+					<span class="pointer-events-none absolute inset-y-0 start-3 flex items-center text-slate-400">
 						<Icon name="search" size={16} />
 					</span>
 					<input
@@ -187,14 +192,17 @@
 						name="q"
 						value={searchTerm}
 						oninput={onSearchInput}
-						placeholder="Name or part no…"
-						class="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-abk-blue"
+						placeholder={t('search.short')}
+						aria-label={t('search.label')}
+						class="w-full rounded-lg border border-slate-200 bg-white py-2 pe-3 ps-9 text-sm outline-none focus:border-abk-blue"
 					/>
 				</div>
 			</div>
 
 			<div>
-				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">Category</h2>
+				<h2 class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+					{t('parts.category')}
+				</h2>
 				<ul class="space-y-0.5 text-sm">
 					<li>
 						<a
@@ -203,7 +211,7 @@
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
 						>
-							All categories
+							{t('parts.allCategories')}
 						</a>
 					</li>
 					{#each taxonomy.categories as cat}
@@ -227,8 +235,11 @@
 				<!-- Bolder and blue, with a vehicle icon, so this reads as more than
 				     another filter group — a customer must always be able to tell
 				     which vehicle brand a part fits. -->
-				<h2 class="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-abk-blue">
-					<Icon name="truck" size={14} /> Brand
+				<h2
+					class="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-abk-blue"
+				>
+					<Icon name="truck" size={14} />
+					{t('parts.brand')}
 				</h2>
 				<ul class="space-y-0.5 text-sm">
 					<li>
@@ -238,7 +249,7 @@
 								? 'bg-abk-sky font-semibold text-abk-blue'
 								: 'text-slate-600 hover:bg-slate-50'}"
 						>
-							All brands
+							{t('parts.allBrands')}
 						</a>
 					</li>
 					{#each taxonomy.brands as brand}
@@ -259,7 +270,8 @@
 			<noscript>
 				<button
 					type="submit"
-					class="w-full rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white">Apply search</button
+					class="w-full rounded-lg bg-abk-blue px-4 py-2 text-sm font-bold text-white"
+					>{t('parts.applySearch')}</button
 				>
 			</noscript>
 		</form>
@@ -300,9 +312,9 @@
 			</div>
 
 			<div class="flex items-center gap-2 text-sm">
-				<span class="text-slate-400">Sort</span>
+				<span class="text-slate-400">{t('parts.sort')}</span>
 				<div class="flex overflow-hidden rounded-lg border border-slate-200">
-					{#each [{ v: 'newest', l: 'Newest' }, { v: 'name', l: 'Name' }, { v: 'brand', l: 'Brand' }] as opt}
+					{#each [{ v: 'newest', l: t('parts.sort.newest') }, { v: 'name', l: t('parts.sort.name') }, { v: 'brand', l: t('parts.sort.brand') }] as opt}
 						<a
 							href={url(buildUrl({ sort: opt.v as Sort }))}
 							class="px-3 py-1.5 text-xs font-semibold {filters.sort === opt.v
@@ -329,13 +341,14 @@
 				>
 					<Icon name="search" size={28} />
 				</div>
-				<h3 class="mt-4 text-lg font-bold text-slate-700">No parts found</h3>
-				<p class="mt-1 text-sm text-slate-500">
-					Try clearing filters or contact us — we source parts on request.
-				</p>
+				<h3 class="mt-4 text-lg font-bold text-slate-700">{t('parts.none.heading')}</h3>
+				<p class="mt-1 text-sm text-slate-500">{t('parts.none.lead')}</p>
 				<div class="mt-5 flex justify-center gap-3">
-					<a href={url('/parts')} class="rounded-full bg-abk-blue px-5 py-2 text-sm font-bold text-white">
-						Clear filters
+					<a
+						href={url('/parts')}
+						class="rounded-full bg-abk-blue px-5 py-2 text-sm font-bold text-white"
+					>
+						{t('action.clearFilters')}
 					</a>
 				</div>
 			</div>

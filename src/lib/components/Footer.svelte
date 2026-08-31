@@ -1,8 +1,10 @@
 <script lang="ts">
-	import { asset, url } from '$lib/paths';
+	import { url } from '$lib/paths';
 	import { nav, site } from '$lib/config';
 	import { taxonomy } from '$lib/taxonomy.svelte';
+	import { t, type TranslationKey } from '$lib/i18n.svelte';
 	import Icon from './Icon.svelte';
+	import Logo from './Logo.svelte';
 
 	const year = new Date().getFullYear();
 </script>
@@ -11,16 +13,16 @@
 	<div class="container-page grid gap-10 py-14 md:grid-cols-2 lg:grid-cols-4">
 		<!-- Brand + contact -->
 		<div class="lg:col-span-1">
-			<div class="inline-flex rounded-lg bg-white p-3 shadow-sm">
-				<img src={asset('/logo.png')} alt={site.name} class="h-10 w-auto" />
+			<div class="inline-flex rounded-lg bg-white px-4 py-3 shadow-sm">
+				<Logo height={34} wordmark />
 			</div>
 			<p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
-				{site.description}
+				{t('site.description')}
 			</p>
 			<div class="mt-5 space-y-2.5 text-sm">
 				<a href={site.phoneHref} class="flex items-center gap-2.5 hover:text-white">
-					<Icon name="phone" size={16} class="text-abk-red" />
-					{site.phoneDisplay}
+					<Icon name="phone" size={16} class="shrink-0 text-abk-red" />
+					<span dir="ltr">{site.phoneDisplay}</span>
 				</a>
 				<a
 					href={`https://wa.me/${site.whatsappNumber}`}
@@ -28,15 +30,15 @@
 					rel="noopener"
 					class="flex items-center gap-2.5 hover:text-white"
 				>
-					<Icon name="whatsapp" size={16} class="text-abk-red" />
-					{site.whatsappDisplay}
+					<Icon name="whatsapp" size={16} class="shrink-0 text-abk-red" />
+					<span dir="ltr">{site.whatsappDisplay}</span>
 				</a>
 				<a href={`mailto:${site.email}`} class="flex items-center gap-2.5 hover:text-white">
-					<Icon name="mail" size={16} class="text-abk-red" />
-					{site.email}
+					<Icon name="mail" size={16} class="shrink-0 text-abk-red" />
+					<span dir="ltr" class="break-all">{site.email}</span>
 				</a>
 				<p class="flex items-center gap-2.5 text-slate-400">
-					<Icon name="pin" size={16} class="text-abk-red" />
+					<Icon name="pin" size={16} class="shrink-0 text-abk-red" />
 					{site.address.city}, {site.address.country}
 				</p>
 			</div>
@@ -44,11 +46,13 @@
 
 		<!-- Quick links -->
 		<div>
-			<h3 class="text-sm font-bold uppercase tracking-wider text-white">Company</h3>
+			<h2 class="text-sm font-bold uppercase tracking-wider text-white">{t('footer.company')}</h2>
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each nav as item}
 					<li>
-						<a href={url(item.href)} class="text-slate-400 hover:text-white">{item.label}</a>
+						<a href={url(item.href)} class="text-slate-400 hover:text-white">
+							{t(item.key as TranslationKey)}
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -56,13 +60,13 @@
 
 		<!-- Categories -->
 		<div>
-			<h3 class="text-sm font-bold uppercase tracking-wider text-white">Parts</h3>
+			<h2 class="text-sm font-bold uppercase tracking-wider text-white">{t('footer.parts')}</h2>
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each taxonomy.categories.slice(0, 6) as cat}
 					<li>
-						<a href={url(`/parts?category=${cat.slug}`)} class="text-slate-400 hover:text-white"
-							>{cat.name}</a
-						>
+						<a href={url(`/parts?category=${cat.slug}`)} class="text-slate-400 hover:text-white">
+							{cat.name}
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -70,13 +74,13 @@
 
 		<!-- Brands -->
 		<div>
-			<h3 class="text-sm font-bold uppercase tracking-wider text-white">Vehicle Brands</h3>
+			<h2 class="text-sm font-bold uppercase tracking-wider text-white">{t('footer.brands')}</h2>
 			<ul class="mt-4 space-y-2.5 text-sm">
 				{#each taxonomy.brands as brand}
 					<li>
-						<a href={url(`/parts?brand=${brand.slug}`)} class="text-slate-400 hover:text-white"
-							>{brand.name}</a
-						>
+						<a href={url(`/parts?brand=${brand.slug}`)} class="text-slate-400 hover:text-white">
+							{brand.name}
+						</a>
 					</li>
 				{/each}
 			</ul>
@@ -97,8 +101,8 @@
 		<div
 			class="container-page flex flex-col items-center justify-between gap-2 py-5 text-xs text-slate-400 sm:flex-row"
 		>
-			<p>© {year} {site.legalName}. All rights reserved.</p>
-			<p>{site.slogan}</p>
+			<p>© {year} {site.legalName}. {t('footer.rights')}</p>
+			<p>{t('site.slogan')}</p>
 		</div>
 	</div>
 </footer>

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { url } from '$lib/paths';
 	import type { Part } from '$lib/types';
+	import { t } from '$lib/i18n.svelte';
 	import PartImage from './PartImage.svelte';
 	import Icon from './Icon.svelte';
 
@@ -20,17 +21,18 @@
 
 		{#if part.featured}
 			<span
-				class="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-abk-red px-2 py-1 text-[11px] font-bold text-white shadow-sm"
+				class="absolute end-2.5 top-2.5 flex items-center gap-1 rounded-full bg-abk-red px-2 py-1 text-[11px] font-bold text-white shadow-sm"
 			>
-				<Icon name="star" size={11} stroke={0} class="fill-current" /> Featured
+				<Icon name="star" size={11} stroke={0} class="fill-current" />
+				{t('part.featured')}
 			</span>
 		{/if}
 
 		{#if !part.in_stock}
 			<span
-				class="absolute bottom-0 left-0 right-0 bg-slate-900/75 py-1 text-center text-[11px] font-semibold text-white"
+				class="absolute inset-x-0 bottom-0 bg-slate-900/75 py-1 text-center text-[11px] font-semibold text-white"
 			>
-				Available on backorder
+				{t('part.backorderLong')}
 			</span>
 		{/if}
 	</div>
@@ -44,7 +46,10 @@
 		>
 			{part.name}
 		</h3>
-		<p class="mt-1 font-mono text-xs text-slate-500">No. {part.part_number}</p>
+		<p class="mt-1 font-mono text-xs text-slate-500">
+			{t('part.partNo')}
+			<span dir="ltr" class="inline-block">{part.part_number}</span>
+		</p>
 
 		<!-- The vehicle brand is the first thing a customer checks — "does this fit
 		     my truck?" — so it sits in the card's data line, in body copy, where
@@ -65,7 +70,8 @@
 			<span
 				class="flex items-center gap-1 text-xs font-bold text-abk-blue opacity-0 transition group-hover:opacity-100"
 			>
-				View <Icon name="arrow" size={14} />
+				{t('action.view')}
+				<Icon name="arrow" size={14} class="rtl:-scale-x-100" />
 			</span>
 		</div>
 	</div>

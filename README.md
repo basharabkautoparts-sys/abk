@@ -259,6 +259,51 @@ the **Deploy to GitHub Pages** workflow from the Actions tab.
 
 ---
 
+## Languages (English + Arabic)
+
+The header carries an **EN / ع** toggle. English is the default and the only
+language that is prerendered; picking Arabic re-renders the interface in place
+and flips the page to RTL by setting `lang` and `dir` on `<html>`. The choice is
+remembered per browser in `localStorage`, and a visitor whose browser asks for
+Arabic gets it on their first visit without touching the switch.
+
+Doing it in the browser rather than as a second build is what keeps the static
+host simple: no `/ar/` tree to generate, no `?lang=` for a file server to vary
+on, one canonical URL per page, and no risk of a half-translated page being
+indexed.
+
+**What is translated is the interface** — navigation, buttons, headings, the
+company blurb. Part names, part numbers and descriptions are catalogue rows
+typed by staff in `/admin`, and they render exactly as entered: machine-flipping
+a part description is how a customer orders the wrong part.
+
+To add or change wording, edit **`src/lib/i18n.svelte.ts`**. English is the
+source of truth — add the key to `en` first, then translate it in `ar`. A key
+Arabic has not defined falls back to English rather than showing a raw key.
+
+> Part numbers are wrapped in `dir="ltr"` wherever they appear. A number like
+> `8-98139-073-0` is a Latin run joined by bidi-neutral hyphens, and without
+> that it renders reversed — as `0-073-98139-8` — inside an Arabic page.
+
+---
+
+## Searching the catalogue
+
+Two things share one index:
+
+- **The header box** gives live suggestions as you type — up to seven parts with
+  a thumbnail, name, part number and vehicle brand, plus a row that opens the
+  full result set. Arrow keys and Enter work; so does Escape. It queries
+  Supabase directly (`listParts`), debounced, and ignores any response that
+  arrives after a newer one.
+- **`/parts`** ships the whole published catalogue and filters it in the browser,
+  because a static host cannot vary a response by query string.
+
+With JavaScript off the header box is still a plain `GET` form to `/parts/?q=`,
+which is why it degrades rather than breaks.
+
+---
+
 ## SEO — what's built in
 
 - **Prerendered HTML** for every public page — real content for crawlers,
@@ -270,6 +315,9 @@ the **Deploy to GitHub Pages** workflow from the Actions tab.
 - **`/sitemap.xml`** generated from the live catalogue at build time,
   **`/robots.txt`** (disallows `/admin`), and social image `/og-image.jpg`.
 - Search-result pages (`?q=`) are `noindex`.
+- The Arabic switch creates **no second set of URLs**: every page is prerendered
+  in English, which is what the canonical tags and the sitemap describe, and
+  Arabic is applied in the browser. See [Languages](#languages-english--arabic).
 - URLs end in a trailing slash (`/parts/`), so every route is a directory with
   an `index.html` — unambiguous on any static host. Canonical tags match.
 
@@ -287,9 +335,9 @@ the **Deploy to GitHub Pages** workflow from the Actions tab.
   domain. In the meantime `/admin` is kept out of the index by its `noindex`
   meta tag, and the sitemap can be submitted directly in Search Console.
 
-**Before launch:** confirm `site.email`, `site.address` and
-`site.social.facebook` in `src/lib/config.ts` — they are still placeholders.
-Phone and WhatsApp are already set from the brand artwork.
+**Before launch:** confirm `site.address` and `site.social.facebook` in
+`src/lib/config.ts` — they are still placeholders. Name, phone, WhatsApp and
+email are set.
 
 ---
 
@@ -336,10 +384,14 @@ src/
     paths.ts             Base-path-aware url() / asset() for every internal link
     query.ts             Prerender-safe query string + path helpers
     seo.ts               Meta + JSON-LD helpers
+    i18n.svelte.ts       EN/AR dictionary, current language, RTL direction
     types.ts             Domain types
     utils.ts             slugify, truncate
     data/seed.ts         Bundled sample catalogue (demo mode)
-    components/          Header, Footer, PartCard, PartForm, Icon, Seo, …
+    components/          Header, Footer, PartCard, PartForm, Icon, Seo,
+                         Logo (mark + company lockup), BrandMark (vehicle-brand
+                         marks, drawn as SVG), SearchBox (live suggestions),
+                         LanguageSwitch, …
   routes/
     +layout.ts           prerender = true, trailingSlash = 'always'
     +page.svelte         Home
