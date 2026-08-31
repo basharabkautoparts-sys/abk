@@ -6,11 +6,11 @@ model and a staff-only admin for managing the catalogue.
 
 - **Framework:** SvelteKit (Svelte 5), prerendered to static HTML
 - **Styling:** Tailwind CSS v4
-- **Data / Auth / Storage:** Supabase (Postgres + Auth + Storage)
-- **Hosting:** GitHub Pages, at
-  <https://basharabkautoparts-sys.github.io/abk/> (a custom domain can be
-  switched on later without touching the code — see
-  [Moving to a custom domain](#moving-to-a-custom-domain))
+- **Data / Auth / Storage:** Supabase-compatible APIs, served same-origin by
+  oxidebase (per-project Postgres + Auth + Storage)
+- **Hosting:** oxidebase, live at <https://abkautopart.com> — **see
+  [DEPLOY.md](DEPLOY.md) for how to deploy.** (The GitHub Pages sections
+  below describe the legacy setup this site originally shipped on.)
 
 ---
 
