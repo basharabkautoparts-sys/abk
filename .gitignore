@@ -17,6 +17,8 @@ Thumbs.db
 
 # Tooling (machine-local)
 .claude/settings.local.json
+# Deploy wrapper — leans on this machine's cached operator token (see DEPLOY.md)
+/deploy.sh
 
 # Source artwork kept out of the repo; the exported assets live in static/
 /*.jpg

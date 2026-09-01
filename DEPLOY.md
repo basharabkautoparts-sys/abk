@@ -20,8 +20,11 @@ and every previous deployment stays on disk for instant rollback.
 
 ## Trigger a deploy
 
-Either through Studio — <https://oxidebase.dev> → project **abk** →
-Deployments → Deploy — or from a shell:
+On the DGX there is a gitignored wrapper for all of the below:
+`./deploy.sh` (push if ahead → build → wait → verify), `./deploy.sh status`
+to compare local / origin / live commits. Everywhere else: either through
+Studio — <https://oxidebase.dev> → project **abk** → Deployments → Deploy —
+or from a shell:
 
 ```sh
 # Operator API token: on the DGX it is cached at ~/.config/oxidebase/prod-token
