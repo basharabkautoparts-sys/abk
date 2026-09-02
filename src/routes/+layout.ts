@@ -1,4 +1,5 @@
 import type { LayoutLoad } from './$types';
+import { publishedCategoryCounts } from '$lib/db';
 import { isSupabaseConfigured } from '$lib/supabase';
 import { ensureTaxonomy } from '$lib/taxonomy.svelte';
 
@@ -26,5 +27,9 @@ export const trailingSlash = 'always';
  */
 export const load: LayoutLoad = async () => {
 	await ensureTaxonomy();
-	return { demoMode: !isSupabaseConfigured };
+
+	// `categoryCounts` rather than `counts`: /parts and the home page each return
+	// their own `counts` computed from the list they already hold, and a shared
+	// key would be shadowed by the page's on exactly the two pages that set it.
+	return { demoMode: !isSupabaseConfigured, categoryCounts: await publishedCategoryCounts() };
 };

@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { url } from '$lib/paths';
 	import { nav, site } from '$lib/config';
-	import { taxonomy } from '$lib/taxonomy.svelte';
+	import { taxonomy, stockedCategories } from '$lib/taxonomy.svelte';
+	import { page } from '$app/state';
 	import { t, type TranslationKey } from '$lib/i18n.svelte';
 	import Icon from './Icon.svelte';
 	import Logo from './Logo.svelte';
 
 	const year = new Date().getFullYear();
+
+	// Counts come from the root layout, so this list is the same on every page —
+	// including the ones that never load the catalogue themselves. Capped at six
+	// to keep the column short; the "All parts" link above covers the rest.
+	const categories = $derived(stockedCategories(page.data.categoryCounts ?? {}).slice(0, 6));
 </script>
 
 <footer class="mt-20 border-t-2 border-abk-red bg-abk-navy text-slate-300">
@@ -62,7 +68,7 @@
 		<div>
 			<h2 class="text-sm font-bold uppercase tracking-wider text-white">{t('footer.parts')}</h2>
 			<ul class="mt-4 space-y-2.5 text-sm">
-				{#each taxonomy.categories.slice(0, 6) as cat}
+				{#each categories as cat (cat.slug)}
 					<li>
 						<a href={url(`/parts?category=${cat.slug}`)} class="text-slate-400 hover:text-white">
 							{cat.name}

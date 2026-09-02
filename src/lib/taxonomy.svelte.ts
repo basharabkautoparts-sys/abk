@@ -75,6 +75,26 @@ export function categoryName(slug: string): string {
 	return categoryBySlug(slug)?.name ?? slug;
 }
 
+/**
+ * The categories worth offering as a filter on the public site.
+ *
+ * A category with nothing in it is a link to an empty listing — it advertises
+ * a range the shop cannot currently supply, and reads as a fault rather than
+ * as stock news. So it is hidden until a part lands in it, and reappears by
+ * itself when one does. The admin still lists every category: you have to be
+ * able to create one and assign the first part to it.
+ *
+ * `keep` pins a slug that must stay visible whatever its count — the category
+ * currently being filtered on, which would otherwise vanish from the very list
+ * that selected it. And if *nothing* has stock (an empty catalogue, or a
+ * catalogue that failed to load) the full list is returned: an empty section is
+ * worse than a few zeroes.
+ */
+export function stockedCategories(counts: Record<string, number>, keep = ''): Category[] {
+	const stocked = taxonomy.categories.filter((c) => (counts[c.slug] ?? 0) > 0 || c.slug === keep);
+	return stocked.length ? stocked : taxonomy.categories;
+}
+
 /* ------------------------------ loading ------------------------------- */
 
 function mapBrand(row: Record<string, unknown>): Brand {

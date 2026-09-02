@@ -2,7 +2,7 @@
 	import { url } from '$lib/paths';
 	import { untrack } from 'svelte';
 	import type { PageData } from './$types';
-	import { taxonomy, categoryBySlug, brandBySlug } from '$lib/taxonomy.svelte';
+	import { taxonomy, categoryBySlug, brandBySlug, stockedCategories } from '$lib/taxonomy.svelte';
 	import { t } from '$lib/i18n.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -214,7 +214,9 @@
 							{t('parts.allCategories')}
 						</a>
 					</li>
-					{#each taxonomy.categories as cat}
+					<!-- Empty categories are left out; the active one is pinned so the
+					     filter you are on never disappears from its own list. -->
+					{#each stockedCategories(data.counts, filters.category) as cat (cat.slug)}
 						<li>
 							<a
 								href={url(buildUrl({ category: cat.slug }))}

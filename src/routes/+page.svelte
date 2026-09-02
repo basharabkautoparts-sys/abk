@@ -2,7 +2,7 @@
 	import { asset, url } from '$lib/paths';
 	import type { PageData } from './$types';
 	import { features, site } from '$lib/config';
-	import { taxonomy } from '$lib/taxonomy.svelte';
+	import { taxonomy, stockedCategories } from '$lib/taxonomy.svelte';
 	import { t, type TranslationKey } from '$lib/i18n.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
@@ -110,7 +110,7 @@
 	</div>
 
 	<div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-		{#each taxonomy.categories as cat}
+		{#each stockedCategories(data.counts) as cat (cat.slug)}
 			<a
 				href={url(`/parts?category=${cat.slug}`)}
 				class="group flex flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-[var(--shadow-card)] transition hover:-translate-y-1 hover:border-abk-blue/30 hover:shadow-lg"

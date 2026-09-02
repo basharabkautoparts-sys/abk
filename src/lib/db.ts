@@ -105,6 +105,39 @@ function tally(list: Part[], key: (p: Part) => string): Record<string, number> {
 	return counts;
 }
 
+/**
+ * Published parts per category slug, for the whole catalogue.
+ *
+ * The chrome around a page — the footer's category links, in particular — has
+ * to know what is in stock on pages that never load the catalogue at all
+ * (/about, /contact, a part detail). Rather than pull the whole catalogue into
+ * the layout for one tally, this asks for the single slug column and nothing
+ * else: a few bytes a row, and one query per visit.
+ *
+ * A failure is swallowed and reported as no counts at all. Filters then degrade
+ * to showing every category (see `stockedCategories`), which is how this looked
+ * before counts existed — losing the footer's links because a count query
+ * failed would be the worse trade.
+ */
+export async function publishedCategoryCounts(): Promise<Record<string, number>> {
+	await ensureTaxonomy();
+	const db = supabase();
+	if (!db) return countByCategory(store());
+
+	const { data, error } = await db.from(TABLE).select('category_slug').eq('published', true);
+	if (error) {
+		console.warn('[catalogue] category counts unavailable:', error.message);
+		return {};
+	}
+
+	const counts: Record<string, number> = {};
+	for (const row of data ?? []) {
+		const slug = String(row.category_slug ?? '');
+		if (slug) counts[slug] = (counts[slug] ?? 0) + 1;
+	}
+	return counts;
+}
+
 /* --------------------------------------------------------------------------
  * Queries. Each resolves the shared client itself, so the same call works
  * during the build and in the browser.
