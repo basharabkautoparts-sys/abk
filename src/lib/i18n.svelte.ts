@@ -1,4 +1,5 @@
 import { browser } from '$app/environment';
+import { site } from './config';
 
 /**
  * Interface language — English and Arabic.
@@ -46,6 +47,33 @@ const STORAGE_KEY = 'abk:lang';
  * ------------------------------------------------------------------ */
 
 const en = {
+	"action.emailUs": "Email Us",
+	"feature.wholesale.title": "B2B Wholesale",
+	"feature.wholesale.text": "Parts sourcing and wholesale supply for automotive businesses worldwide.",
+	"home.why.4.title": "B2B Wholesale",
+	"home.why.4.text": "Reliable sourcing for importers, distributors, wholesalers, workshops and automotive businesses.",
+	"about.who.1": "A.B.K. Auto Parts Co., Ltd. is a Thailand-based B2B wholesale supplier and exporter of Japanese auto parts, with more than 25 years of experience in international automotive parts trading and export.",
+	"about.who.2": "We specialize in Toyota, Isuzu, Mitsubishi and Nissan, and also supply other Japanese and international car brands to customers worldwide.",
+	"about.who.3": "Our customers include importers, distributors, wholesalers, workshops and automotive businesses looking for reliable parts sourcing from Thailand. We offer genuine parts as our main focus, along with OEM and aftermarket options to meet different market requirements.",
+	"about.who.4": "From sourcing and order preparation to professional packing and international shipping, we are committed to providing reliable service, accurate parts sourcing and smooth export handling.",
+	"about.who.slogan": "Quality you can trust. Service you can rely on.",
+	"export.eyebrow": "From Thailand to the world",
+	"export.heading": "Our export destinations",
+	"export.lead": "B2B wholesale supply from Thailand to customers across the Middle East, Africa and beyond.",
+	"export.mapLabel": "Map connecting Thailand with Saudi Arabia, Dubai, Yemen, Sudan, Libya, Panama, Chad, Egypt, Iraq and Oman.",
+	"export.origin": "Thailand",
+	"export.destinations": "Export destinations",
+	"export.saudi": "Saudi Arabia",
+	"export.dubai": "Dubai",
+	"export.yemen": "Yemen",
+	"export.sudan": "Sudan",
+	"export.libya": "Libya",
+	"export.panama": "Panama",
+	"export.chad": "Chad",
+	"export.egypt": "Egypt",
+	"export.iraq": "Iraq",
+	"export.oman": "Oman",
+
 	// --- chrome ---
 	'nav.home': 'Home',
 	'nav.parts': 'All Parts',
@@ -76,6 +104,8 @@ const en = {
 	'search.parts': 'Parts',
 
 	// --- home ---
+	'home.hero.heading': 'Genuine Japanese Auto Parts,',
+	'home.hero.accent': 'Delivered Worldwide.',
 	'home.stat.brands': 'Vehicle brands',
 	'home.stat.categories': 'Part categories',
 	'home.stat.export': 'Export shipping',
@@ -87,7 +117,7 @@ const en = {
 
 	'home.category.eyebrow': 'Shop by category',
 	'home.category.heading': 'Find the right part',
-	'home.category.lead': 'From engine internals to body panels — browse our catalogue by system.',
+	'home.category.lead': 'From engine internals to body and interior parts — browse our catalogue by system.',
 
 	'home.gallery.label': 'Genuine parts in stock at A.B.K. Auto Parts',
 	'home.latest.eyebrow': 'New arrivals',
@@ -96,7 +126,7 @@ const en = {
 	'home.why.heading': 'Why buy from ABK?',
 	'home.why.1.title': 'Authenticity guaranteed',
 	'home.why.1.text':
-		'Every part is 100% genuine — sourced through trusted Japanese channels, never imitation.',
+		'Specialists in genuine Japanese parts, with OEM and aftermarket options to match your requirements.',
 	'home.why.2.title': 'Reliable worldwide export',
 	'home.why.2.text':
 		'Professional packing and worldwide shipping so your parts arrive safely, on time.',
@@ -181,15 +211,14 @@ const en = {
 
 	// --- features (config.ts carries the English; these mirror it) ---
 	'feature.genuine.title': '100% Genuine',
-	'feature.genuine.text': 'Authentic Japanese parts, sourced and verified — no imitations.',
+	'feature.genuine.text': 'Genuine Japanese parts, sourced through trusted channels.',
 	'feature.export.title': 'Global Export',
 	'feature.export.text': 'Reliable worldwide shipping direct from Thailand.',
 	'feature.quality.title': 'Premium Quality',
 	'feature.quality.text': 'Trusted service and quality you can rely on, order after order.',
 
 	// --- long-form copy the owner supplied ---
-	'site.description':
-		'A.B.K. Auto Parts Co., Ltd. supplies genuine parts for Toyota, Isuzu, Mitsubishi, Nissan, and other leading automotive brands. With over 25 years of export experience, we deliver quality you can trust and service you can rely on.',
+	'site.description': site.description,
 	'site.slogan': 'Quality you can trust, service you can rely on.',
 	'site.tagline': 'Genuine Japanese Parts'
 } as const;
@@ -197,6 +226,33 @@ const en = {
 export type TranslationKey = keyof typeof en;
 
 const ar: Partial<Record<TranslationKey, string>> = {
+	"action.emailUs": "راسلنا بالبريد الإلكتروني",
+	"feature.wholesale.title": "بيع بالجملة للشركات",
+	"feature.wholesale.text": "توفير قطع الغيار وتوريدها بالجملة لشركات قطاع السيارات حول العالم.",
+	"home.why.4.title": "بيع بالجملة للشركات",
+	"home.why.4.text": "توريد موثوق للمستوردين والموزعين وتجار الجملة وورش الصيانة وشركات قطاع السيارات.",
+	"about.who.1": "شركة A.B.K. Auto Parts Co., Ltd. هي مورّد ومصدّر لقطع غيار السيارات اليابانية بالجملة للشركات، ومقرّها تايلاند، وتتمتع بخبرة تزيد على ٢٥ عاماً في التجارة الدولية لقطع غيار السيارات وتصديرها.",
+	"about.who.2": "نتخصص في تويوتا وإيسوزو وميتسوبيشي ونيسان، كما نوفر قطع غيار لماركات سيارات يابانية وعالمية أخرى لعملائنا حول العالم.",
+	"about.who.3": "يشمل عملاؤنا المستوردين والموزعين وتجار الجملة وورش الصيانة وشركات قطاع السيارات التي تبحث عن مصادر موثوقة لقطع الغيار من تايلاند. نركز على القطع الأصلية، ونوفر أيضاً خيارات من مصنّعي المعدات الأصلية (OEM) ومن السوق البديلة لتلبية احتياجات الأسواق المختلفة.",
+	"about.who.4": "من توفير القطع وتجهيز الطلبات إلى التغليف الاحترافي والشحن الدولي، نلتزم بتقديم خدمة موثوقة، وتوفير القطع بدقة، وإتمام إجراءات التصدير بسلاسة.",
+	"about.who.slogan": "جودة تثق بها. خدمة تعتمد عليها.",
+	"export.eyebrow": "من تايلاند إلى العالم",
+	"export.heading": "وجهات التصدير",
+	"export.lead": "توريد بالجملة للشركات من تايلاند إلى العملاء في الشرق الأوسط وأفريقيا ومناطق أخرى حول العالم.",
+	"export.mapLabel": "خريطة تربط تايلاند بالسعودية ودبي واليمن والسودان وليبيا وبنما وتشاد ومصر والعراق وعُمان.",
+	"export.origin": "تايلاند",
+	"export.destinations": "وجهات التصدير",
+	"export.saudi": "السعودية",
+	"export.dubai": "دبي",
+	"export.yemen": "اليمن",
+	"export.sudan": "السودان",
+	"export.libya": "ليبيا",
+	"export.panama": "بنما",
+	"export.chad": "تشاد",
+	"export.egypt": "مصر",
+	"export.iraq": "العراق",
+	"export.oman": "عُمان",
+
 	'nav.home': 'الرئيسية',
 	'nav.parts': 'جميع القطع',
 	'nav.about': 'من نحن',
@@ -225,6 +281,8 @@ const ar: Partial<Record<TranslationKey, string>> = {
 	'search.seeAll': 'عرض كل النتائج لـ',
 	'search.parts': 'القطع',
 
+	'home.hero.heading': 'قطع غيار يابانية أصلية،',
+	'home.hero.accent': 'نوصّلها إلى جميع أنحاء العالم.',
 	'home.stat.brands': 'ماركات المركبات',
 	'home.stat.categories': 'فئات القطع',
 	'home.stat.export': 'الشحن للتصدير',
@@ -236,7 +294,7 @@ const ar: Partial<Record<TranslationKey, string>> = {
 
 	'home.category.eyebrow': 'تسوق حسب الفئة',
 	'home.category.heading': 'اعثر على القطعة المناسبة',
-	'home.category.lead': 'من أجزاء المحرك إلى ألواح الهيكل — تصفح الكتالوج حسب النظام.',
+	'home.category.lead': 'من أجزاء المحرك إلى قطع الهيكل والمقصورة — تصفح الكتالوج حسب النظام.',
 
 	'home.gallery.label': 'قطع غيار أصلية متوفرة لدى A.B.K. Auto Parts',
 	'home.latest.eyebrow': 'وصل حديثاً',
@@ -244,7 +302,7 @@ const ar: Partial<Record<TranslationKey, string>> = {
 
 	'home.why.heading': 'لماذا تشتري من ABK؟',
 	'home.why.1.title': 'أصالة مضمونة',
-	'home.why.1.text': 'كل قطعة أصلية ١٠٠٪ — من مصادر يابانية موثوقة، وليست تقليداً أبداً.',
+	'home.why.1.text': 'متخصصون في قطع الغيار اليابانية الأصلية، مع خيارات من مصنّعي المعدات الأصلية والسوق البديلة لتلبية احتياجاتك.',
 	'home.why.2.title': 'تصدير موثوق حول العالم',
 	'home.why.2.text': 'تغليف احترافي وشحن عالمي حتى تصل قطعك بأمان وفي الوقت المحدد.',
 	'home.why.3.title': 'دعم متخصص',
@@ -321,14 +379,14 @@ const ar: Partial<Record<TranslationKey, string>> = {
 	'contact.ready.cta': 'راسلنا على واتساب',
 
 	'feature.genuine.title': 'أصلية ١٠٠٪',
-	'feature.genuine.text': 'قطع يابانية أصلية، من مصادر موثوقة ومفحوصة — بلا تقليد.',
+	'feature.genuine.text': 'قطع يابانية أصلية من مصادر موثوقة.',
 	'feature.export.title': 'تصدير عالمي',
 	'feature.export.text': 'شحن موثوق إلى جميع أنحاء العالم مباشرة من تايلاند.',
 	'feature.quality.title': 'جودة ممتازة',
 	'feature.quality.text': 'خدمة موثوقة وجودة تعتمد عليها، طلباً بعد طلب.',
 
 	'site.description':
-		'تورّد شركة A.B.K. Auto Parts Co., Ltd. قطع غيار أصلية لتويوتا وإيسوزو وميتسوبيشي ونيسان وغيرها من كبرى ماركات السيارات. وبخبرة تتجاوز ٢٥ عاماً في التصدير، نقدّم جودة تثق بها وخدمة تعتمد عليها.',
+		'شركة A.B.K. Auto Parts Co., Ltd. هي مورّد ومصدّر لقطع غيار السيارات اليابانية الأصلية بالجملة للشركات، ومقرّها تايلاند. نتخصص في تويوتا وإيسوزو وميتسوبيشي ونيسان وغيرها من كبرى ماركات السيارات. وبخبرة تزيد على ٢٥ عاماً في التصدير، نوفر قطع غيار وخدمة موثوقة للعملاء حول العالم.',
 	'site.slogan': 'جودة تثق بها، وخدمة تعتمد عليها.',
 	'site.tagline': 'قطع غيار يابانية أصلية'
 };

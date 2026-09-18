@@ -18,7 +18,7 @@
 	<img
 		src={img}
 		alt={part.name}
-		class="h-full w-full object-cover {cls}"
+		class="h-full w-full object-contain {cls}"
 		loading={eager ? 'eager' : 'lazy'}
 		decoding="async"
 	/>

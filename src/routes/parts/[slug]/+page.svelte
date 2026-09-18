@@ -13,6 +13,11 @@
 	const part = $derived(data.part);
 
 	let selected = $state(0);
+	$effect(() => {
+		// Related-part navigation can reuse this component; reset its gallery.
+		part.id;
+		selected = 0;
+	});
 
 	/**
 	 * Only rows that were actually filled in. The page used to print a fixed
@@ -68,12 +73,12 @@
 		</a>
 	</nav>
 
-	<div class="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-14">
+	<div class="mt-8 grid gap-10 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
 		<!-- Gallery -->
 		<div>
-			<div class="aspect-square overflow-hidden rounded-xl border border-slate-200 bg-white">
+			<div class="aspect-square overflow-hidden bg-white">
 				{#if part.images.length}
-					<img src={part.images[selected]} alt={part.name} class="h-full w-full object-cover" />
+					<img src={part.images[selected] ?? part.images[0]} alt={part.name} class="h-full w-full object-contain" />
 				{:else}
 					<PartImage {part} eager />
 				{/if}
@@ -88,16 +93,16 @@
 								? 'border-abk-blue'
 								: 'border-slate-200'}"
 							aria-label={`${t('part.viewImage')} ${i + 1}`}
+							aria-pressed={selected === i}
 						>
-							<img src={img} alt="" class="h-full w-full object-cover" />
+							<img src={img} alt="" class="h-full w-full object-contain" />
 						</button>
 					{/each}
 				</div>
 			{/if}
 		</div>
 
-		<!-- Details. Plain and vertical: brand, name, number, then the two ways
-		     to reach us. Nothing between the buyer and the enquiry. -->
+		<!-- The part number leads, matching the wholesale catalogue reference. -->
 		<div class="lg:pt-2">
 			<a
 				href={url(`/parts?brand=${part.brand.slug}`)}
@@ -106,38 +111,33 @@
 				{part.brand.name}
 			</a>
 
-			<h1 class="mt-2 text-3xl font-black leading-tight tracking-tight text-slate-900 sm:text-4xl">
-				{part.name}
+			<h1 class="mt-3 break-words text-3xl font-normal leading-tight tracking-tight text-slate-900 sm:text-4xl">
+				<span dir={part.part_number ? 'ltr' : undefined} class="inline-block">{part.part_number || part.name}</span>
 			</h1>
-
-			<!-- `dir="ltr"`: a part number is a Latin run joined by bidi-neutral
-			     hyphens, and Arabic page direction would otherwise reverse its
-			     segments and display a different number. -->
-			<p class="mt-3 font-mono text-sm text-slate-500">
-				{t('part.partNo')}
-				<span dir="ltr" class="inline-block text-slate-700">{part.part_number}</span>
-			</p>
+			{#if part.part_number}
+				<p class="mt-4 text-base font-medium text-slate-800">{part.name}</p>
+			{/if}
 
 			{#if part.description}
-				<p class="mt-5 leading-relaxed text-slate-600">{part.description}</p>
+				<p class="mt-3 leading-relaxed text-slate-600">{part.description}</p>
 			{/if}
 
 			<div class="mt-7 flex flex-col gap-3 sm:flex-row">
 				<a
+					href={`mailto:${site.email}?subject=${encodeURIComponent(`${part.name} (${part.part_number})`)}`}
+					class="inline-flex flex-1 items-center justify-center gap-2 border border-slate-300 bg-slate-100 px-6 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-200"
+				>
+					<Icon name="mail" size={20} />
+					{t('action.emailUs')}
+				</a>
+				<a
 					href={whatsappInquiry(part.name, part.part_number)}
 					target="_blank"
 					rel="noopener"
-					class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-abk-red px-6 py-3 font-bold text-white transition hover:bg-abk-red-dark"
+					class="inline-flex flex-1 items-center justify-center gap-2 bg-emerald-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800"
 				>
 					<Icon name="whatsapp" size={20} />
-					{t('action.inquireWhatsapp')}
-				</a>
-				<a
-					href={`mailto:${site.email}?subject=${encodeURIComponent(`${part.name} (${part.part_number})`)}`}
-					class="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-300 px-6 py-3 font-bold text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
-				>
-					<Icon name="mail" size={20} />
-					{t('contact.method.email')}
+					{t('action.whatsapp')}
 				</a>
 			</div>
 

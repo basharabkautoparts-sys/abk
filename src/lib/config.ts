@@ -18,11 +18,11 @@ export const site = {
 	 * here and it changes everywhere; do not paraphrase it in a component.
 	 */
 	description:
-		'A.B.K. Auto Parts Co., Ltd. supplies genuine parts for Toyota, Isuzu, Mitsubishi, Nissan, and other leading automotive brands. With over 25 years of export experience, we deliver quality you can trust and service you can rely on.',
+		'A.B.K. Auto Parts Co., Ltd. is a Thailand-based B2B wholesale supplier and exporter of genuine Japanese auto parts, specializing in Toyota, Isuzu, Mitsubishi, Nissan and other leading automotive brands. With 25+ years of export experience, we provide reliable parts and service to customers worldwide.',
 
 	/** Shorter form, for meta descriptions where the full sentence runs long. */
 	metaDescription:
-		'A.B.K. Auto Parts Co., Ltd. — genuine parts for Toyota, Isuzu, Mitsubishi and Nissan, with over 25 years of export experience from Thailand.',
+		'A.B.K. Auto Parts Co., Ltd. — B2B wholesale supplier and exporter of Japanese auto parts from Thailand, with 25+ years of export experience.',
 
 	/**
 	 * Origin the site is served from, with no trailing slash and no base path —
@@ -78,7 +78,7 @@ export const features = [
 		icon: 'shield',
 		key: 'feature.genuine',
 		title: '100% Genuine',
-		text: 'Authentic Japanese parts, sourced and verified — no imitations.'
+		text: 'Genuine Japanese parts, sourced through trusted channels.'
 	},
 	{
 		icon: 'globe',
@@ -91,6 +91,12 @@ export const features = [
 		key: 'feature.quality',
 		title: 'Premium Quality',
 		text: 'Trusted service and quality you can rely on, order after order.'
+	},
+	{
+		icon: 'truck',
+		key: 'feature.wholesale',
+		title: 'B2B Wholesale',
+		text: 'Parts sourcing and wholesale supply for automotive businesses worldwide.'
 	}
 ] as const;
 
@@ -166,8 +172,8 @@ export const DEFAULT_CATEGORIES: Category[] = [
 	},
 	{
 		slug: 'body-parts',
-		name: 'Body Parts',
-		description: 'Lamps, mirrors, panels, grilles and exterior trim.',
+		name: 'Body & Interior Parts',
+		description: 'Lamps, mirrors, panels, grilles, interior fittings and trim.',
 		icon: 'body',
 		sort_order: 7
 	}

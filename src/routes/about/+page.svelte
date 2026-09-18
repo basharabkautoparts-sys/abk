@@ -12,7 +12,7 @@
 <Seo
 	title="About Us"
 	canonical="/about"
-	description={`About ${site.name} — a Thailand-based supplier of 100% genuine Japanese auto parts for Toyota, Isuzu, Mitsubishi and Nissan, exporting worldwide.`}
+	description={`About ${site.name} — a Thailand-based B2B wholesale supplier and exporter of Japanese auto parts for Toyota, Isuzu, Mitsubishi and Nissan, exporting worldwide.`}
 	jsonLd={[breadcrumbJsonLd([{ name: 'Home', url: '/' }, { name: 'About', url: '/about' }])]}
 />
 
@@ -32,19 +32,10 @@
 		<div class="rule-brand mb-3"></div>
 		<h2 class="text-3xl font-black tracking-tight text-slate-800">{t('about.who.heading')}</h2>
 		<div class="mt-4 space-y-4 leading-relaxed text-slate-600">
-			<p>
-				{site.name} is a Thailand-based supplier of authentic Japanese automotive parts. We specialise
-				in <strong>Toyota, Isuzu, Mitsubishi and Nissan</strong> — supplying workshops, dealers and
-				vehicle owners with the exact parts they need.
-			</p>
-			<p>
-				Every item we sell is <strong>100% genuine</strong>. We never deal in imitation parts, because
-				the right part, made to specification, is what keeps vehicles safe and reliable on the road.
-			</p>
-			<p>
-				With professional packing and reliable export shipping, we deliver to customers around the
-				world — {site.slogan.toLowerCase()}
-			</p>
+			{#each [1, 2, 3, 4] as n}
+				<p>{t(`about.who.${n}` as TranslationKey)}</p>
+			{/each}
+			<p class="font-semibold text-abk-blue">{t('about.who.slogan')}</p>
 		</div>
 		<div class="mt-8 flex flex-wrap gap-3">
 			<a
@@ -63,7 +54,7 @@
 		</div>
 	</div>
 
-	<div class="overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)]">
+	<div class="self-start overflow-hidden rounded-2xl border border-slate-200 shadow-[var(--shadow-card)]">
 		<img src={asset('/banner-square.jpg')} alt={site.name} class="w-full" width="1254" height="1254" />
 	</div>
 </section>
@@ -75,7 +66,7 @@
 			<div class="rule-brand mx-auto mb-3 w-fit"></div>
 			<h2 class="text-3xl font-black tracking-tight text-slate-800">{t('about.values.heading')}</h2>
 		</div>
-		<div class="mt-10 grid gap-6 sm:grid-cols-3">
+		<div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
 			{#each features as f}
 				<div
 					class="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-[var(--shadow-card)]"

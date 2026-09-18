@@ -52,7 +52,7 @@ insert into public.part_categories (slug, name, description, icon, sort_order) v
 	('filters',             'Filters',               'Oil, air, fuel and cabin filters for every service interval.', 'filter', 4),
 	('clutch-drivetrain',   'Clutch & Drivetrain',   'Clutch discs, pressure plates, CV joints, axles and bearings.', 'clutch', 5),
 	('electrical-ignition', 'Electrical & Ignition', 'Spark plugs, ignition coils, sensors, alternators and starters.', 'spark', 6),
-	('body-parts',          'Body Parts',            'Lamps, mirrors, panels, grilles and exterior trim.', 'body', 7)
+	('body-parts',          'Body & Interior Parts',            'Lamps, mirrors, panels, grilles, interior fittings and trim.', 'body', 7)
 on conflict (slug) do nothing;
 
 create table if not exists public.parts (

@@ -6,10 +6,10 @@
 	import { t, type TranslationKey } from '$lib/i18n.svelte';
 	import Seo from '$lib/components/Seo.svelte';
 	import Icon from '$lib/components/Icon.svelte';
-	import Logo from '$lib/components/Logo.svelte';
 	import PartCard from '$lib/components/PartCard.svelte';
 	import BrandMark, { needsNameLabel } from '$lib/components/BrandMark.svelte';
 	import PartsMarquee from '$lib/components/PartsMarquee.svelte';
+	import ExportMap from '$lib/components/ExportMap.svelte';
 	import { organizationJsonLd, websiteJsonLd } from '$lib/seo';
 
 	let { data }: { data: PageData } = $props();
@@ -20,55 +20,34 @@
 
 <Seo canonical="/" jsonLd={[organizationJsonLd(), websiteJsonLd()]} description={site.metaDescription} />
 
-<!-- ============================ HERO ============================
-     White, with the company lockup where the headline used to be and the
-     vehicle brands facing it across a divider — the arrangement the owner
-     sketched. No band, no photo montage: the logo is the statement. -->
-<section class="border-b border-slate-100 bg-white">
-	<div class="container-page grid items-center gap-10 py-14 lg:grid-cols-2 lg:gap-16 lg:py-20">
-		<div class="text-center lg:text-start">
-			<Logo height={92} wordmark class="mx-auto lg:mx-0" />
-
-			<p class="mx-auto mt-7 max-w-xl text-lg leading-relaxed text-slate-600 lg:mx-0">
+<!-- ============================ HERO ============================ -->
+<section class="bg-abk-blue text-white">
+	<div class="container-page grid items-center gap-12 py-14 lg:grid-cols-[1.2fr_1fr] lg:gap-16 lg:py-20">
+		<div>
+			<h1 class="max-w-2xl text-4xl font-black leading-[1.08] tracking-tight sm:text-5xl lg:text-6xl">
+				{t('home.hero.heading')}
+				<span class="mt-2 block text-blue-200">{t('home.hero.accent')}</span>
+			</h1>
+			<p class="mt-7 max-w-xl text-base leading-relaxed text-blue-50 sm:text-lg">
 				{t('site.description')}
 			</p>
-
-			<div class="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start">
-				<a
-					href={url('/parts')}
-					class="inline-flex items-center gap-2 rounded-full bg-abk-blue px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-abk-navy"
-				>
-					{t('action.browseParts')}
-					<Icon name="arrow" size={18} class="rtl:-scale-x-100" />
+			<div class="mt-8 flex flex-wrap gap-3">
+				<a href={url('/parts')} class="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-bold text-abk-blue transition hover:bg-blue-50">
+					{t('action.browseParts')}<Icon name="arrow" size={18} class="rtl:-scale-x-100" />
 				</a>
-				<a
-					href={`https://wa.me/${site.whatsappNumber}`}
-					target="_blank"
-					rel="noopener"
-					class="inline-flex items-center gap-2 rounded-full bg-abk-red px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-abk-red-dark"
-				>
-					<Icon name="whatsapp" size={18} />
-					{t('action.inquireWhatsapp')}
+				<a href={`https://wa.me/${site.whatsappNumber}`} target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-full bg-abk-red px-6 py-3 text-sm font-bold text-white transition hover:bg-abk-red-dark">
+					<Icon name="whatsapp" size={18} />{t('action.inquireWhatsapp')}
 				</a>
 			</div>
 		</div>
-
-		<!-- Vehicle brands, facing the lockup across a rule (lg and up). -->
-		<div class="lg:border-s lg:border-slate-200 lg:ps-16">
-			<p class="mb-5 text-center text-xs font-bold uppercase tracking-wider text-slate-400 lg:text-start">
-				{t('home.coverage.eyebrow')}
-			</p>
+		<div class="lg:border-s lg:border-white/20 lg:ps-12">
+			<p class="mb-5 text-xs font-bold uppercase tracking-wider text-blue-100">{t('home.coverage.eyebrow')}</p>
 			<ul class="grid grid-cols-2 gap-3 sm:gap-4">
 				{#each taxonomy.brands as brand}
 					<li>
-						<a
-							href={url(`/parts?brand=${brand.slug}`)}
-							class="flex h-28 flex-col items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
-						>
+						<a href={url(`/parts?brand=${brand.slug}`)} class="flex h-28 flex-col items-center justify-center gap-2 rounded-xl bg-white px-3 text-slate-700 transition hover:bg-blue-50 hover:text-abk-blue sm:h-32">
 							<BrandMark slug={brand.slug} name={brand.name} size={44} />
-							{#if needsNameLabel(brand.slug)}
-								<span class="text-sm font-bold tracking-tight">{brand.name}</span>
-							{/if}
+							{#if needsNameLabel(brand.slug)}<span class="text-sm font-bold tracking-tight">{brand.name}</span>{/if}
 						</a>
 					</li>
 				{/each}
@@ -79,7 +58,7 @@
 
 <!-- ============================ FEATURES ============================ -->
 <section class="border-b border-slate-100 bg-white">
-	<div class="container-page grid gap-6 py-10 sm:grid-cols-3">
+	<div class="container-page grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4">
 		{#each features as f}
 			<div class="flex items-start gap-4">
 				<div
@@ -169,7 +148,7 @@
 			<div class="rule-brand mb-3"></div>
 			<h2 class="text-3xl font-black tracking-tight text-slate-800">{t('home.why.heading')}</h2>
 			<ul class="mt-6 space-y-4">
-				{#each [1, 2, 3] as n}
+				{#each [1, 2, 3, 4] as n}
 					<li class="flex gap-3">
 						<span
 							class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-abk-sky text-abk-blue"
@@ -235,6 +214,8 @@
 	</section>
 {/if}
 
+<ExportMap />
+
 <!-- ============================ CONTACT CTA ============================ -->
 <section class="bg-slate-50 py-16">
 	<div class="container-page">
@@ -255,11 +236,11 @@
 					<span dir="ltr">{site.whatsappDisplay}</span>
 				</a>
 				<a
-					href={site.phoneHref}
+					href={`mailto:${site.email}`}
 					class="inline-flex items-center gap-2 rounded-full border border-slate-300 px-6 py-3 text-sm font-bold text-slate-700 transition hover:border-abk-blue hover:text-abk-blue"
 				>
-					<Icon name="phone" size={18} />
-					<span dir="ltr">{site.phoneDisplay}</span>
+					<Icon name="mail" size={18} />
+					{t('action.emailUs')}
 				</a>
 			</div>
 		</div>

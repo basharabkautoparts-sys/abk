@@ -106,10 +106,16 @@ function mapBrand(row: Record<string, unknown>): Brand {
 }
 
 function mapCategory(row: Record<string, unknown>): Category {
+	// Keep existing URLs and part associations when upgrading the original label.
+	// Custom names/descriptions entered in the admin continue to take precedence.
+	const originalBodyCategory = row.slug === 'body-parts' && row.name === 'Body Parts';
+	const bodyCategory = DEFAULT_CATEGORIES.find((category) => category.slug === 'body-parts')!;
 	return {
 		slug: String(row.slug),
-		name: String(row.name),
-		description: String(row.description ?? ''),
+		name: originalBodyCategory ? bodyCategory.name : String(row.name),
+		description: originalBodyCategory && row.description === 'Lamps, mirrors, panels, grilles and exterior trim.'
+			? bodyCategory.description
+			: String(row.description ?? ''),
 		icon: String(row.icon || 'part'),
 		sort_order: Number(row.sort_order ?? 0)
 	};

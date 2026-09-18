@@ -23,3 +23,6 @@ Thumbs.db
 # Source artwork kept out of the repo; the exported assets live in static/
 /*.jpg
 /*.png
+
+# Private Messenger design references (not public site assets)
+/feedback-references/
